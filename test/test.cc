@@ -84,9 +84,9 @@ class BlockingCallbackQueue {
     const bool valid = queue_.front().operator bool();
     if (valid) {
       queue_.front()();
-      queue_.pop();
-      condition_.notify_all();
     }
+    queue_.pop();
+    condition_.notify_all();
     return valid;
   }
 
