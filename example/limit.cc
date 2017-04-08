@@ -1,0 +1,110 @@
+#include <chrono>
+#include <iostream>
+#include <list>
+#include <string>
+#include <thread>
+
+#include "thread-capture.h"
+
+// The base class just provides an interface for tracking/reporting resources.
+class LimitEffort : public ThreadCapture<LimitEffort> {
+ public:
+  static bool ShouldContinue() {
+    return GetCurrent()? !GetCurrent()->LimitReached() : true;
+  }
+
+  static void Consume(int amount) {
+    if (GetCurrent()) {
+      GetCurrent()->DecrementResources(amount);
+    }
+  }
+
+ protected:
+  LimitEffort() = default;
+  virtual ~LimitEffort() = default;
+
+  virtual bool LimitReached() = 0;
+  virtual void DecrementResources(int amount) {}
+
+  // Don't add a ScopedCapture member to the base class, because that would make
+  // it impossible to write an implementation that doesn't automatically capture
+  // logging. (For example, you might want to create a static instance to use as
+  // a default when no other logger is capturing data.)
+};
+
+// This implementation imposes a time-based limit.
+class LimitTime : public LimitEffort {
+ public:
+  LimitTime(double seconds) :
+      seconds_(seconds),
+      start_time_(std::chrono::high_resolution_clock::now()),
+      capture_to_(this) {}
+
+ protected:
+  bool LimitReached() override {
+    const auto current_time =
+        std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(
+        current_time - start_time_).count() / 1000000.0 > seconds_;
+  }
+
+ private:
+  const double seconds_;
+  const std::chrono::high_resolution_clock::time_point start_time_;
+  const ScopedCapture capture_to_;
+};
+
+// This implementation imposes a counter-based limit.
+class LimitCount : public LimitEffort {
+ public:
+  LimitCount(int count) :
+      count_(count),
+      capture_to_(this) {}
+
+ protected:
+  bool LimitReached() override {
+    return count_ <= 0;
+  }
+
+  void DecrementResources(int amount) override {
+    count_ -= amount;
+  }
+
+ private:
+  int count_;
+  const ScopedCapture capture_to_;
+};
+
+// Performs the actual work. It's important to remember that this function, and
+// its callers all the way up, need to do something reasonable when stopping
+// early. In this case, we're just counting. In other situations, you might have
+// a partial result of a computation, which itself might be an acceptable result
+// (e.g., an aborted search operation), or it might not be (e.g., a partially-
+// completed matrix multiplication.)
+void ResourceConsumingWorker() {
+  for (int i = 0; i < 100 && LimitEffort::ShouldContinue(); ++i) {
+    std::cerr << i << ' ';
+    LimitEffort::Consume(i);
+    std::this_thread::sleep_for(std::chrono::milliseconds(i));
+  }
+  std::cerr << std::endl;
+}
+
+void ProcessByTime() {
+  LimitTime limit(1.0);
+  ResourceConsumingWorker();
+}
+
+void ProcessByCount() {
+  LimitCount limit(500);
+  ResourceConsumingWorker();
+}
+
+int main() {
+  std::cerr << "Process with time limit..." << std::endl;
+  ProcessByTime();
+  std::cerr << "Process with count limit..." << std::endl;
+  ProcessByCount();
+  std::cerr << "Process without limit..." << std::endl;
+  ResourceConsumingWorker();
+}

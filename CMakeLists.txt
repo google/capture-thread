@@ -24,6 +24,13 @@ target_link_libraries(
   capture-thread
   pthread)
 
+add_executable(
+  limit
+  example/limit.cc)
+target_link_libraries(
+  limit
+  capture-thread)
+
 find_package(GTest)
 if(GTEST_LIBRARIES)
 
