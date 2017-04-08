@@ -195,6 +195,23 @@ TEST(ThreadCrosserTest, MultipleThreadCrossingWithMultipleLoggers) {
   EXPECT_THAT(count_logger.GetCountsUnsafe(), ElementsAre(1, 2));
 }
 
+TEST(ThreadCrosserTest, MultipleThreadCrossingWithDifferentLoggerScopes) {
+  LogText text_logger;
+
+  std::thread worker(ThreadCrosser::WrapCall([] {
+        LogValues count_logger;
+        std::thread worker(ThreadCrosser::WrapCall([] {
+              LogText::Log("logged 1");
+              LogValues::Count(1);
+            }));
+        worker.join();
+        EXPECT_THAT(count_logger.GetCountsUnsafe(), ElementsAre(1));
+      }));
+  worker.join();
+
+  EXPECT_THAT(text_logger.GetLinesUnsafe(), ElementsAre("logged 1"));
+}
+
 TEST(ThreadCrosserTest, DifferentLoggersInSameThread) {
   BlockingCallbackQueue queue;
 
