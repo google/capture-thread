@@ -14,6 +14,8 @@ class LogText : public ThreadCapture<LogText> {
   static void Log(std::string line) {
     if (GetCurrent()) {
       GetCurrent()->LogLine(std::move(line));
+    } else {
+      std::cerr << "*** Not captured: \"" << line << "\" ***" << std::endl;
     }
   }
 
@@ -38,12 +40,24 @@ class LogText : public ThreadCapture<LogText> {
   const ScopedCapture capture_to_;
 };
 
-int main() {
+void NoLogger() {
   LogText::Log("No logger is in scope.");
+}
+
+void LoggedOp1() {
+  LogText::Log("The logger is in scope.");
+}
+
+void LoggedOp2() {
+  LogText::Log("It captures all lines.");
+}
+
+int main() {
+  NoLogger();
   {
     LogText logger;
-    LogText::Log("The logger is in scope.");
-    LogText::Log("It captures all lines.");
+    LoggedOp1();
+    LoggedOp2();
 
     for (const auto& line : logger.GetLines()) {
       std::cerr << "Captured: " << line << std::endl;

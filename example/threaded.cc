@@ -15,6 +15,8 @@ class LogText : public ThreadCapture<LogText> {
   static void Log(std::string line) {
     if (GetCurrent()) {
       GetCurrent()->LogLine(std::move(line));
+    } else {
+      std::cerr << "*** Not captured: \"" << line << "\" ***" << std::endl;
     }
   }
 
@@ -45,19 +47,30 @@ class LogText : public ThreadCapture<LogText> {
   const AutoThreadCrosser<LogText> cross_and_capture_to_;
 };
 
-int main() {
+void NoLogger() {
   LogText::Log("No logger is in scope.");
+}
+
+void LoggedOp() {
+  LogText::Log("The logger is in scope.");
+}
+
+void LoggedOpInThread() {
+  LogText::Log("ThreadCrosser::WrapCall passes on logging.");
+}
+
+void UnloggedOpInThread() {
+  LogText::Log("Logging has not been passed on here.");
+}
+
+int main() {
+  NoLogger();
   {
     LogText logger;
-    LogText::Log("The logger is in scope.");
+    LoggedOp();
 
-    std::thread logged_thread(ThreadCrosser::WrapCall([] {
-          LogText::Log("ThreadCrosser::WrapCall passes on logging.");
-        }));
-
-    std::thread unlogged_thread([] {
-          LogText::Log("Logging has not been passed on here.");
-        });
+    std::thread logged_thread(ThreadCrosser::WrapCall(&LoggedOpInThread));
+    std::thread unlogged_thread(&UnloggedOpInThread);
 
     logged_thread.join();
     unlogged_thread.join();
