@@ -157,6 +157,32 @@ TEST(ThreadCrosserTest, WrapCallIsFineWithoutLogger) {
   EXPECT_TRUE(called);
 }
 
+TEST(ThreadCrosserTest, WrapCallIsNotLazy) {
+  LogText logger1;
+  bool called = false;
+  const auto callback = ThreadCrosser::WrapCall([&called] {
+      called = true;
+      LogText::Log("logged 1");
+    });
+  LogText logger2;
+  callback();
+  EXPECT_TRUE(called);
+  EXPECT_THAT(logger1.GetLinesUnsafe(), ElementsAre("logged 1"));
+  EXPECT_THAT(logger2.GetLinesUnsafe(), ElementsAre());
+}
+
+TEST(ThreadCrosserTest, WrapCallFallsThroughWithoutLogger) {
+  bool called = false;
+  const auto callback = ThreadCrosser::WrapCall([&called] {
+      called = true;
+      LogText::Log("logged 1");
+    });
+  LogText logger;
+  callback();
+  EXPECT_TRUE(called);
+  EXPECT_THAT(logger.GetLinesUnsafe(), ElementsAre("logged 1"));
+}
+
 TEST(ThreadCrosserTest, WrapCallWithNullCallbackIsNull) {
   EXPECT_FALSE(ThreadCrosser::WrapCall(nullptr));
   LogText logger;
