@@ -31,6 +31,13 @@ target_link_libraries(
   limit
   capture-thread)
 
+add_executable(
+  mock
+  example/mock.cc)
+target_link_libraries(
+  mock
+  capture-thread)
+
 find_package(GTest)
 if(GTEST_LIBRARIES)
 
