@@ -23,6 +23,8 @@ limitations under the License.
 
 #include "thread-capture.h"
 
+namespace capture_thread {
+
 class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
  public:
   static std::function<void()> WrapCall(std::function<void()> call);
@@ -73,5 +75,7 @@ class AutoThreadCrosser : public ThreadCrosser, public ThreadCapture<Type> {
   // bridge_ must stay after capture_to_.
   const typename ThreadCapture<Type>::ThreadBridge bridge_;
 };
+
+}  // namespace capture_thread
 
 #endif  // THREAD_CROSSER_H_

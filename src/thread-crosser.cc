@@ -18,6 +18,8 @@ limitations under the License.
 
 #include "thread-crosser.h"
 
+namespace capture_thread {
+
 // static
 std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call) {
   if (call && GetCurrent()) {
@@ -42,3 +44,5 @@ std::function<void()> ThreadCrosser::WrapCallRec(
     return call;
   }
 }
+
+}  // namespace capture_thread

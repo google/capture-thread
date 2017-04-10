@@ -25,6 +25,10 @@ limitations under the License.
 #include "thread-capture.h"
 #include "thread-crosser.h"
 
+using capture_thread::ThreadCapture;
+using capture_thread::AutoThreadCrosser;
+using capture_thread::ThreadCrosser;
+
 // See simple.cc for comments. The only comments here relate to threading.)
 class LogText : public ThreadCapture<LogText> {
  public:

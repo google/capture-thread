@@ -32,7 +32,7 @@ limitations under the License.
 
 using testing::ElementsAre;
 
-namespace {
+namespace capture_thread {
 
 class LogText : public ThreadCapture<LogText> {
  public:
@@ -120,8 +120,6 @@ class BlockingCallbackQueue {
   std::condition_variable condition_;
   std::queue<std::function<void()>> queue_;
 };
-
-}  // namespace
 
 TEST(ThreadCaptureTest, NoLoggerInterferenceWithDifferentTypes) {
   LogText::Log("not logged");
@@ -297,6 +295,8 @@ TEST(ThreadCrosserTest, DifferentLoggersInSameThread) {
   queue.Push(nullptr);  // (Causes the thread to exit.)
   worker.join();
 }
+
+}  // namespace capture_thread
 
 int main(int argc, char *argv[]) {
   testing::InitGoogleTest(&argc, argv);

@@ -24,6 +24,8 @@ limitations under the License.
 
 #include "thread-capture.h"
 
+using capture_thread::ThreadCapture;
+
 // The base class just provides an interface for tracking/reporting resources.
 class LimitEffort : public ThreadCapture<LimitEffort> {
  public:

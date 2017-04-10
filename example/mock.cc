@@ -25,6 +25,8 @@ limitations under the License.
 
 #include "thread-capture.h"
 
+using capture_thread::ThreadCapture;
+
 class FileAdapter : public ThreadCapture<FileAdapter> {
  public:
   FileAdapter() : capture_to_(this) {}

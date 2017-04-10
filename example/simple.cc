@@ -22,6 +22,8 @@ limitations under the License.
 
 #include "thread-capture.h"
 
+using capture_thread::ThreadCapture;
+
 // Inherit from ThreadCapture, passing the class name as the template argument.
 class LogText : public ThreadCapture<LogText> {
  public:

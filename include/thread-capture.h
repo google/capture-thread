@@ -19,6 +19,8 @@ limitations under the License.
 #ifndef THREAD_CAPTURE_H_
 #define THREAD_CAPTURE_H_
 
+namespace capture_thread {
+
 template<class Type>
 class ThreadCapture {
  private:
@@ -101,5 +103,7 @@ class ThreadCapture {
 template <class Type>
 thread_local typename ThreadCapture<Type>::ValueType
     ThreadCapture<Type>::current_(nullptr);
+
+}  // namespace capture_thread
 
 #endif  // THREAD_CAPTURE_H_
