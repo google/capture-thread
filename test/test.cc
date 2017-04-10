@@ -296,6 +296,38 @@ TEST(ThreadCrosserTest, DifferentLoggersInSameThread) {
   worker.join();
 }
 
+TEST(ThreadCrosserTest, ReverseOrderOfLoggersOnStack) {
+  LogText logger1;
+  const auto callback = ThreadCrosser::WrapCall([] {
+        LogText::Log("logged 1");
+      });
+
+  LogText logger2;
+  const auto worker_call = ThreadCrosser::WrapCall([callback] {
+        // In callback(), logger1 overrides logger2, whereas in the main thread
+        // logger2 overrides logger1.
+        callback();
+        LogText::Log("logged 2");
+      });
+
+  LogText logger3;
+
+  // Call using a thread.
+  std::thread worker(worker_call);
+  worker.join();
+
+  EXPECT_THAT(logger1.GetLinesUnsafe(), ElementsAre("logged 1"));
+  EXPECT_THAT(logger2.GetLinesUnsafe(), ElementsAre("logged 2"));
+  EXPECT_THAT(logger3.GetLinesUnsafe(), ElementsAre());
+
+  // Call in the main thread.
+  worker_call();
+
+  EXPECT_THAT(logger1.GetLinesUnsafe(), ElementsAre("logged 1", "logged 1"));
+  EXPECT_THAT(logger2.GetLinesUnsafe(), ElementsAre("logged 2", "logged 2"));
+  EXPECT_THAT(logger3.GetLinesUnsafe(), ElementsAre());
+}
+
 }  // namespace capture_thread
 
 int main(int argc, char *argv[]) {
