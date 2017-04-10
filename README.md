@@ -4,12 +4,9 @@ Framework for loggers, tracers, and mockers in multithreaded C++ programs.
 
 ## Motivation
 
-Instrumenting C++ code can be difficult and ugly, and once finished it can also
-cause the original code to be difficult to maintain.
-
-This library solves the following (extremely common) problem: *Information needs
-to be passed between different levels of implementation, but that information
-isn't an integral part of the system's design.*
+This library solves the following problem: *Information needs to be passed
+between different levels of implementation, but that information isn't an
+integral part of the system's design.*
 
 For example:
 
@@ -20,10 +17,14 @@ For example:
 3.  Mockers that need to replace a real object with a mock object without being
     able to do so via dependency injection.
 
-Explicitly passing objects down from the top causes code to become
-unmaintainable, and using global static data can cause serious complications in
-multithreaded environments when you only want to log, trace, or mock a certain
-call and not others.
+Instrumenting C++ code can be difficult and ugly, and once finished it can also
+cause the original code to be difficult to maintain. Explicitly passing objects 
+down from the top causes code to become unmaintainable, and using global static
+data can cause serious complications in multithreaded environments when you only 
+want to log, trace, or mock a certain call and not others.
+
+This library solves those problems by tracking information per thread, but also
+with the possibility of automatically passing information between threads.
 
 ## Using
 
