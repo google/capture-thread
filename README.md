@@ -1,5 +1,7 @@
 # Capture Thread Library
 
+*(This is not an official Google product.)*
+
 Framework for loggers, tracers, and mockers in multithreaded C++ programs.
 
 ## Motivation
