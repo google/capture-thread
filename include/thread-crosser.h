@@ -66,14 +66,16 @@ class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
 template <class Type>
 class AutoThreadCrosser : public ThreadCrosser {
  public:
-  AutoThreadCrosser(Type* logger) : capture_to_(logger) {}
+  AutoThreadCrosser(Type* capture) : capture_to_(capture) {
+    TypeMustInheritFromThreadCapture(capture);
+  }
 
  protected:
   std::function<void()> WrapWithContext(
       std::function<void()> call) const override {
     if (call) {
       return [this, call] {
-        const typename ThreadCapture<Type>::CrossThreads logger(capture_to_);
+        const typename Type::CrossThreads capture(capture_to_);
         call();
       };
     } else {
@@ -82,6 +84,10 @@ class AutoThreadCrosser : public ThreadCrosser {
   }
 
  private:
+  static constexpr void TypeMustInheritFromThreadCapture(
+      const ThreadCapture<Type>* capture) {}
+
+  // Type must inherit from ThreadCapture<Type>.
   const typename Type::ScopedCapture capture_to_;
 };
 
