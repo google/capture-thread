@@ -60,15 +60,16 @@ class LimitTime : public LimitEffort {
         start_time_(std::chrono::high_resolution_clock::now()),
         capture_to_(this) {}
 
- protected:
-  bool LimitReached() override {
+  double ResourcesConsumed() const {
     const auto current_time = std::chrono::high_resolution_clock::now();
     return std::chrono::duration_cast<std::chrono::microseconds>(current_time -
                                                                  start_time_)
-                   .count() /
-               1000000.0 >
-           seconds_;
+               .count() /
+           1000000.0;
   }
+
+ protected:
+  bool LimitReached() override { return ResourcesConsumed() > seconds_; }
 
  private:
   const double seconds_;
@@ -81,8 +82,10 @@ class LimitCount : public LimitEffort {
  public:
   LimitCount(int count) : count_(count), capture_to_(this) {}
 
+  int ResourcesRemaining() const { return count_; }
+
  protected:
-  bool LimitReached() override { return count_ <= 0; }
+  bool LimitReached() override { return ResourcesRemaining() <= 0; }
 
   void DecrementResources(int amount) override { count_ -= amount; }
 
@@ -109,11 +112,14 @@ void ResourceConsumingWorker() {
 void ProcessByTime() {
   LimitTime limit(1.0);
   ResourceConsumingWorker();
+  std::cerr << "Resources consumed: " << limit.ResourcesConsumed() << std::endl;
 }
 
 void ProcessByCount() {
   LimitCount limit(500);
   ResourceConsumingWorker();
+  std::cerr << "Resources remaining: " << limit.ResourcesRemaining()
+            << std::endl;
 }
 
 int main() {
