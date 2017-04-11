@@ -96,16 +96,20 @@ class BlockingCallbackQueue {
   // is used to wait until all calls complete.
   bool PopAndCall() {
     std::unique_lock<std::mutex> lock(queue_lock_);
-    while (queue_.empty()) {
+    while (!terminated_ && queue_.empty()) {
       condition_.wait(lock);
     }
-    const bool valid = queue_.front().operator bool();
-    if (valid) {
-      queue_.front()();
+    if (terminated_) {
+      return false;
+    } else {
+      const auto callback = queue_.front();
+      if (callback) {
+        callback();
+      }
+      queue_.pop();
+      condition_.notify_all();
+      return true;
     }
-    queue_.pop();
-    condition_.notify_all();
-    return valid;
   }
 
   void WaitUntilEmpty() {
@@ -115,9 +119,16 @@ class BlockingCallbackQueue {
     }
   }
 
+  void Terminate() {
+    std::lock_guard<std::mutex> lock(queue_lock_);
+    terminated_ = true;
+    condition_.notify_all();
+  }
+
  private:
   std::mutex queue_lock_;
   std::condition_variable condition_;
+  bool terminated_ = false;
   std::queue<std::function<void()>> queue_;
 };
 
@@ -292,7 +303,7 @@ TEST(ThreadCrosserTest, DifferentLoggersInSameThread) {
   queue.WaitUntilEmpty();
   EXPECT_THAT(logger1.GetLinesUnsafe(), ElementsAre("logged 1", "logged 3"));
 
-  queue.Push(nullptr);  // (Causes the thread to exit.)
+  queue.Terminate();
   worker.join();
 }
 
