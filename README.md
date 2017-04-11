@@ -1,8 +1,8 @@
 # Capture Thread Library
 
-*(This is not an official Google product.)*
-
 Framework for loggers, tracers, and mockers in multithreaded C++ programs.
+
+*(This is not an official Google product.)*
 
 ## Motivation
 
@@ -20,13 +20,18 @@ For example:
     able to do so via dependency injection.
 
 Instrumenting C++ code can be difficult and ugly, and once finished it can also
-cause the original code to be difficult to maintain. Explicitly passing objects 
-down from the top causes code to become unmaintainable, and using global static
-data can cause serious complications in multithreaded environments when you only 
-want to log, trace, or mock a certain call and not others.
+cause the original code to be difficult to maintain:
 
-This library solves those problems by tracking information per thread, but also
-with the possibility of automatically passing information between threads.
+-   Explicitly passing objects down from the top causes code to become
+    unmaintainable.
+-   Using global data can cause serious complications in multithreaded
+    environments when you only want to log, trace, or mock a certain call and
+    not others.
+-   Using a unique identifier to look up shared data in a global hash table
+    requires both creating an identifier and passing it around.
+
+This library circumvents these problems by tracking information per thread, with
+the possibility of conditionally sharing information between threads.
 
 ## Using
 
