@@ -43,7 +43,7 @@ class FileFactory : public ThreadCapture<FileFactory> {
 
  protected:
   FileFactory() = default;
-  ~FileFactory() = default;
+  virtual ~FileFactory() = default;
 
   // Overrides how files are opened.
   virtual std::unique_ptr<std::istream> GetReadStream(
