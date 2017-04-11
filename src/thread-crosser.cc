@@ -24,9 +24,9 @@ namespace capture_thread {
 std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call) {
   if (call && GetCurrent()) {
     call = WrapCallRec(std::move(call), GetCurrent());
-    const ScopedCapture* const capture_to = &GetCurrent()->capture_to_;
-    return [capture_to, call] {
-      const CrossThreads logger(*capture_to);
+    const ScopedCapture& capture_to = GetCurrent()->capture_to_;
+    return [&capture_to, call] {
+      const CrossThreads logger(capture_to);
       call();
     };
   } else {

@@ -25,6 +25,9 @@ limitations under the License.
 
 namespace capture_thread {
 
+// Automatically makes an object shared within a single thread to be shared with
+// another thread. Use AutoThreadCrosser to add the functionality to an object,
+// then use ThreadCrosser::WrapCall to enable sharing for a specific callback.
 class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
  public:
   // NOTE: The return of WrapFunction (and its copies) must never outlive the
@@ -54,6 +57,8 @@ class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
   const ScopedCapture capture_to_;
 };
 
+// Enables cross-thread sharing for the given type. Use this class instead of
+// ThreadCapture<Type>::ScopedCapture when defining Type.
 template <class Type>
 class AutoThreadCrosser : public ThreadCrosser, public ThreadCapture<Type> {
  public:

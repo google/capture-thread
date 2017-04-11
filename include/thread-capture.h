@@ -21,11 +21,16 @@ limitations under the License.
 
 namespace capture_thread {
 
+// Base class for objects that are used to share information within a thread.
+// This class provides access to an API for making an object visible within the
+// current thread until the object goes out of scope.
 template <class Type>
 class ThreadCapture {
  public:
   class CrossThreads;
 
+  // Allows the current object (if any) to be made available in another thread.
+  // See thread-crosser.h for canonical usage.
   class ThreadBridge {
    public:
     inline ThreadBridge() : capture_(GetCurrent()) {}
@@ -45,6 +50,8 @@ class ThreadCapture {
   class ScopedCapture;
 
  public:
+  // Provides access to an object from another thread within the current thread.
+  // See thread-crosser.h for canonical usage.
   class CrossThreads {
    public:
     explicit inline CrossThreads(const ThreadBridge& bridge)
@@ -73,8 +80,9 @@ class ThreadCapture {
   ThreadCapture() = default;
   ~ThreadCapture() = default;
 
-  static inline Type* GetCurrent() { return current_; }
-
+  // Add this as a member when defining Type (as a class), and pass 'this' to
+  // the constructor to make an instance of Type available within the thread
+  // it's allocated in.
   class ScopedCapture {
    public:
     explicit inline ScopedCapture(Type* capture)
@@ -95,6 +103,9 @@ class ThreadCapture {
     Type* const previous_;
     Type* const current_;
   };
+
+  // Gets the most-recent object from the stack of the current thread.
+  static inline Type* GetCurrent() { return current_; }
 
  private:
   ThreadCapture(const ThreadCapture&) = delete;
