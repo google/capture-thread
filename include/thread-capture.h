@@ -23,9 +23,6 @@ namespace capture_thread {
 
 template<class Type>
 class ThreadCapture {
- private:
-  using ValueType = Type*;
-
  public:
   class CrossThreads;
 
@@ -41,7 +38,7 @@ class ThreadCapture {
     void* operator new(std::size_t size) = delete;
 
     friend class CrossThreads;
-    const ValueType capture_;
+    Type* const capture_;
   };
 
   class CrossThreads {
@@ -60,18 +57,18 @@ class ThreadCapture {
     CrossThreads& operator =(CrossThreads&&) = delete;
     void* operator new(std::size_t size) = delete;
 
-    const ValueType previous_;
+    Type* const previous_;
   };
 
  protected:
   ThreadCapture() = default;
   ~ThreadCapture() = default;
 
-  static inline ValueType GetCurrent() { return current_; }
+  static inline Type* GetCurrent() { return current_; }
 
   class ScopedCapture {
    public:
-    explicit inline ScopedCapture(ValueType capture) : previous_(GetCurrent()) {
+    explicit inline ScopedCapture(Type* capture) : previous_(GetCurrent()) {
       SetCurrent(capture);
     }
 
@@ -84,7 +81,7 @@ class ThreadCapture {
     ScopedCapture& operator =(ScopedCapture&&) = delete;
     void* operator new(std::size_t size) = delete;
 
-    const ValueType previous_;
+    Type* const previous_;
   };
 
  private:
@@ -93,16 +90,15 @@ class ThreadCapture {
   ThreadCapture& operator =(const ThreadCapture&) = delete;
   ThreadCapture& operator =(ThreadCapture&&) = delete;
 
-  static inline void SetCurrent(ValueType value) {
+  static inline void SetCurrent(Type* value) {
     current_ = value;
   }
 
-  static thread_local ValueType current_;
+  static thread_local Type* current_;
 };
 
 template <class Type>
-thread_local typename ThreadCapture<Type>::ValueType
-    ThreadCapture<Type>::current_(nullptr);
+thread_local Type* ThreadCapture<Type>::current_(nullptr);
 
 }  // namespace capture_thread
 
