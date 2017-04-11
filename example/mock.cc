@@ -27,10 +27,12 @@ limitations under the License.
 
 using capture_thread::ThreadCapture;
 
-class FileAdapter : public ThreadCapture<FileAdapter> {
+// Handles the creation of file objects. Unless an instance of an implementation
+// is in scope, uses a default file-open operation. Implementations can override
+// if/how files are opened.
+class FileFactory : public ThreadCapture<FileFactory> {
  public:
-  FileAdapter() : capture_to_(this) {}
-
+  // Returns an open file, or nullptr.
   static std::unique_ptr<std::istream> ReadFile(const std::string& filename) {
     if (GetCurrent()) {
       return GetCurrent()->GetReadStream(filename);
@@ -40,15 +42,21 @@ class FileAdapter : public ThreadCapture<FileAdapter> {
   }
 
  protected:
+  FileFactory() = default;
+  ~FileFactory() = default;
+
+  // Overrides how files are opened.
   virtual std::unique_ptr<std::istream> GetReadStream(
       const std::string& filename) = 0;
-
- private:
-  const ScopedCapture capture_to_;
 };
 
-class FileMocker : public FileAdapter {
+// Replaces the default file-open behavior of FileFactory when in scope.
+class FileMocker : public FileFactory {
  public:
+  FileMocker() : capture_to_(this) {}
+
+  // Registers a string-backed mock file that's used in place of an actual file
+  // on the filesystem.
   void MockFile(std::string filename, std::string content) {
     files_.emplace(std::move(filename), std::move(content));
   }
@@ -67,10 +75,12 @@ class FileMocker : public FileAdapter {
 
  private:
   std::unordered_map<std::string, std::string> files_;
+  const ScopedCapture capture_to_;
 };
 
+// Some arbitrary function whose API we can't change to add mocking capability.
 int OpenConfigAndCountWords() {
-  const auto input = FileAdapter::ReadFile("CMakeLists.txt");
+  const auto input = FileFactory::ReadFile("CMakeLists.txt");
   if (!input) {
     return -1;
   } else {
@@ -86,12 +96,19 @@ int OpenConfigAndCountWords() {
 int main() {
   std::cerr << "Word count *without* mock: " << OpenConfigAndCountWords()
             << std::endl;
+
   {
+    // Only overrides FileFactory::ReadFile while in scope.
     FileMocker mocker;
+
+    std::cerr << "Word count with missing file: " << OpenConfigAndCountWords()
+              << std::endl;
+
     mocker.MockFile("CMakeLists.txt", "one two three");
     std::cerr << "Word count *with* mock: " << OpenConfigAndCountWords()
               << std::endl;
   }
+
   std::cerr << "Word count *without* mock: " << OpenConfigAndCountWords()
             << std::endl;
 }
