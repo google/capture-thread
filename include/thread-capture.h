@@ -21,7 +21,7 @@ limitations under the License.
 
 namespace capture_thread {
 
-template<class Type>
+template <class Type>
 class ThreadCapture {
  public:
   class CrossThreads;
@@ -33,8 +33,8 @@ class ThreadCapture {
    private:
     ThreadBridge(const ThreadBridge&) = delete;
     ThreadBridge(ThreadBridge&&) = delete;
-    ThreadBridge& operator =(const ThreadBridge&) = delete;
-    ThreadBridge& operator =(ThreadBridge&&) = delete;
+    ThreadBridge& operator=(const ThreadBridge&) = delete;
+    ThreadBridge& operator=(ThreadBridge&&) = delete;
     void* operator new(std::size_t size) = delete;
 
     friend class CrossThreads;
@@ -43,8 +43,8 @@ class ThreadCapture {
 
   class CrossThreads {
    public:
-    explicit inline CrossThreads(const ThreadBridge& bridge) :
-        previous_(GetCurrent()) {
+    explicit inline CrossThreads(const ThreadBridge& bridge)
+        : previous_(GetCurrent()) {
       SetCurrent(bridge.capture_);
     }
 
@@ -53,8 +53,8 @@ class ThreadCapture {
    private:
     CrossThreads(const CrossThreads&) = delete;
     CrossThreads(CrossThreads&&) = delete;
-    CrossThreads& operator =(const CrossThreads&) = delete;
-    CrossThreads& operator =(CrossThreads&&) = delete;
+    CrossThreads& operator=(const CrossThreads&) = delete;
+    CrossThreads& operator=(CrossThreads&&) = delete;
     void* operator new(std::size_t size) = delete;
 
     Type* const previous_;
@@ -77,8 +77,8 @@ class ThreadCapture {
    private:
     ScopedCapture(const ScopedCapture&) = delete;
     ScopedCapture(ScopedCapture&&) = delete;
-    ScopedCapture& operator =(const ScopedCapture&) = delete;
-    ScopedCapture& operator =(ScopedCapture&&) = delete;
+    ScopedCapture& operator=(const ScopedCapture&) = delete;
+    ScopedCapture& operator=(ScopedCapture&&) = delete;
     void* operator new(std::size_t size) = delete;
 
     Type* const previous_;
@@ -87,12 +87,10 @@ class ThreadCapture {
  private:
   ThreadCapture(const ThreadCapture&) = delete;
   ThreadCapture(ThreadCapture&&) = delete;
-  ThreadCapture& operator =(const ThreadCapture&) = delete;
-  ThreadCapture& operator =(ThreadCapture&&) = delete;
+  ThreadCapture& operator=(const ThreadCapture&) = delete;
+  ThreadCapture& operator=(ThreadCapture&&) = delete;
 
-  static inline void SetCurrent(Type* value) {
-    current_ = value;
-  }
+  static inline void SetCurrent(Type* value) { current_ = value; }
 
   static thread_local Type* current_;
 };

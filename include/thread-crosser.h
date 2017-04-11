@@ -42,12 +42,12 @@ class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
  private:
   ThreadCrosser(const ThreadCrosser&) = delete;
   ThreadCrosser(ThreadCrosser&&) = delete;
-  ThreadCrosser& operator =(const ThreadCrosser&) = delete;
-  ThreadCrosser& operator =(ThreadCrosser&&) = delete;
+  ThreadCrosser& operator=(const ThreadCrosser&) = delete;
+  ThreadCrosser& operator=(ThreadCrosser&&) = delete;
   void* operator new(std::size_t size) = delete;
 
-  static std::function<void()> WrapCallRec(
-      std::function<void()> call, const ThreadCrosser* current);
+  static std::function<void()> WrapCallRec(std::function<void()> call,
+                                           const ThreadCrosser* current);
 
   // parent_ must stay before capture_to_.
   ThreadCrosser* const parent_;

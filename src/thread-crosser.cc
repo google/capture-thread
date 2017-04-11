@@ -35,11 +35,11 @@ std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call) {
 }
 
 // static
-std::function<void()> ThreadCrosser::WrapCallRec(
-    std::function<void()> call, const ThreadCrosser* current) {
+std::function<void()> ThreadCrosser::WrapCallRec(std::function<void()> call,
+                                                 const ThreadCrosser* current) {
   if (current) {
-    return WrapCallRec(
-        current->WrapFunction(std::move(call)), current->parent_);
+    return WrapCallRec(current->WrapFunction(std::move(call)),
+                       current->parent_);
   } else {
     return call;
   }

@@ -20,9 +20,9 @@ limitations under the License.
 #include <functional>
 #include <list>
 #include <mutex>
+#include <queue>
 #include <string>
 #include <thread>
-#include <queue>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -44,9 +44,7 @@ class LogText : public ThreadCapture<LogText> {
     }
   }
 
-  const std::list<std::string> GetLinesUnsafe() {
-    return lines_;
-  }
+  const std::list<std::string> GetLinesUnsafe() { return lines_; }
 
  private:
   void LogLine(std::string line) {
@@ -69,9 +67,7 @@ class LogValues : public ThreadCapture<LogValues> {
     }
   }
 
-  const std::list<int> GetCountsUnsafe() {
-    return counts_;
-  }
+  const std::list<int> GetCountsUnsafe() { return counts_; }
 
  private:
   void LogCount(int count) {
@@ -151,25 +147,23 @@ TEST(ThreadCaptureTest, NoLoggerInterferenceWithDifferentTypes) {
 }
 
 TEST(ThreadCaptureTest, SameTypeOverrides) {
-    LogText text_logger1;
-    LogText::Log("logged 1");
-    {
-      LogText text_logger2;
-      LogText::Log("logged 2");
-      EXPECT_THAT(text_logger2.GetLinesUnsafe(), ElementsAre("logged 2"));
-    }
-    LogText::Log("logged 3");
-    EXPECT_THAT(text_logger1.GetLinesUnsafe(),
-                ElementsAre("logged 1", "logged 3"));
+  LogText text_logger1;
+  LogText::Log("logged 1");
+  {
+    LogText text_logger2;
+    LogText::Log("logged 2");
+    EXPECT_THAT(text_logger2.GetLinesUnsafe(), ElementsAre("logged 2"));
+  }
+  LogText::Log("logged 3");
+  EXPECT_THAT(text_logger1.GetLinesUnsafe(),
+              ElementsAre("logged 1", "logged 3"));
 }
 
 TEST(ThreadCaptureTest, ThreadsAreNotCrossed) {
   LogText logger;
   LogText::Log("logged 1");
 
-  std::thread worker([] {
-        LogText::Log("logged 2");
-      });
+  std::thread worker([] { LogText::Log("logged 2"); });
   worker.join();
 
   EXPECT_THAT(logger.GetLinesUnsafe(), ElementsAre("logged 1"));
@@ -178,9 +172,9 @@ TEST(ThreadCaptureTest, ThreadsAreNotCrossed) {
 TEST(ThreadCrosserTest, WrapCallIsFineWithoutLogger) {
   bool called = false;
   ThreadCrosser::WrapCall([&called] {
-      called = true;
-      LogText::Log("not logged");
-    })();
+    called = true;
+    LogText::Log("not logged");
+  })();
   EXPECT_TRUE(called);
 }
 
@@ -188,9 +182,9 @@ TEST(ThreadCrosserTest, WrapCallIsNotLazy) {
   LogText logger1;
   bool called = false;
   const auto callback = ThreadCrosser::WrapCall([&called] {
-      called = true;
-      LogText::Log("logged 1");
-    });
+    called = true;
+    LogText::Log("logged 1");
+  });
   LogText logger2;
   callback();
   EXPECT_TRUE(called);
@@ -201,9 +195,9 @@ TEST(ThreadCrosserTest, WrapCallIsNotLazy) {
 TEST(ThreadCrosserTest, WrapCallFallsThroughWithoutLogger) {
   bool called = false;
   const auto callback = ThreadCrosser::WrapCall([&called] {
-      called = true;
-      LogText::Log("logged 1");
-    });
+    called = true;
+    LogText::Log("logged 1");
+  });
   LogText logger;
   callback();
   EXPECT_TRUE(called);
@@ -220,9 +214,7 @@ TEST(ThreadCrosserTest, SingleThreadCrossing) {
   LogText logger;
   LogText::Log("logged 1");
 
-  std::thread worker(ThreadCrosser::WrapCall([] {
-        LogText::Log("logged 2");
-      }));
+  std::thread worker(ThreadCrosser::WrapCall([] { LogText::Log("logged 2"); }));
   worker.join();
 
   EXPECT_THAT(logger.GetLinesUnsafe(), ElementsAre("logged 1", "logged 2"));
@@ -235,12 +227,12 @@ TEST(ThreadCrosserTest, MultipleThreadCrossingWithMultipleLoggers) {
   LogValues::Count(1);
 
   std::thread worker(ThreadCrosser::WrapCall([] {
-        std::thread worker(ThreadCrosser::WrapCall([] {
-              LogText::Log("logged 2");
-              LogValues::Count(2);
-            }));
-        worker.join();
-      }));
+    std::thread worker(ThreadCrosser::WrapCall([] {
+      LogText::Log("logged 2");
+      LogValues::Count(2);
+    }));
+    worker.join();
+  }));
   worker.join();
 
   EXPECT_THAT(text_logger.GetLinesUnsafe(),
@@ -252,14 +244,14 @@ TEST(ThreadCrosserTest, MultipleThreadCrossingWithDifferentLoggerScopes) {
   LogText text_logger;
 
   std::thread worker(ThreadCrosser::WrapCall([] {
-        LogValues count_logger;
-        std::thread worker(ThreadCrosser::WrapCall([] {
-              LogText::Log("logged 1");
-              LogValues::Count(1);
-            }));
-        worker.join();
-        EXPECT_THAT(count_logger.GetCountsUnsafe(), ElementsAre(1));
-      }));
+    LogValues count_logger;
+    std::thread worker(ThreadCrosser::WrapCall([] {
+      LogText::Log("logged 1");
+      LogValues::Count(1);
+    }));
+    worker.join();
+    EXPECT_THAT(count_logger.GetCountsUnsafe(), ElementsAre(1));
+  }));
   worker.join();
 
   EXPECT_THAT(text_logger.GetLinesUnsafe(), ElementsAre("logged 1"));
@@ -269,20 +261,18 @@ TEST(ThreadCrosserTest, DifferentLoggersInSameThread) {
   BlockingCallbackQueue queue;
 
   std::thread worker([&queue] {
-        while (true) {
-          LogText logger;
-          if (!queue.PopAndCall()) {
-            break;
-          }
-          LogText::Log("logged in thread");
-          EXPECT_THAT(logger.GetLinesUnsafe(), ElementsAre("logged in thread"));
-        }
-      });
+    while (true) {
+      LogText logger;
+      if (!queue.PopAndCall()) {
+        break;
+      }
+      LogText::Log("logged in thread");
+      EXPECT_THAT(logger.GetLinesUnsafe(), ElementsAre("logged in thread"));
+    }
+  });
 
   LogText logger1;
-  queue.Push(ThreadCrosser::WrapCall([] {
-        LogText::Log("logged 1");
-      }));
+  queue.Push(ThreadCrosser::WrapCall([] { LogText::Log("logged 1"); }));
   queue.WaitUntilEmpty();
   EXPECT_THAT(logger1.GetLinesUnsafe(), ElementsAre("logged 1"));
 
@@ -290,16 +280,12 @@ TEST(ThreadCrosserTest, DifferentLoggersInSameThread) {
     // It's important for the test case that logger2 overrides logger1, i.e.,
     // that they are both in scope at the same time.
     LogText logger2;
-    queue.Push(ThreadCrosser::WrapCall([] {
-          LogText::Log("logged 2");
-        }));
+    queue.Push(ThreadCrosser::WrapCall([] { LogText::Log("logged 2"); }));
     queue.WaitUntilEmpty();
     EXPECT_THAT(logger2.GetLinesUnsafe(), ElementsAre("logged 2"));
   }
 
-  queue.Push(ThreadCrosser::WrapCall([] {
-        LogText::Log("logged 3");
-      }));
+  queue.Push(ThreadCrosser::WrapCall([] { LogText::Log("logged 3"); }));
   queue.WaitUntilEmpty();
   EXPECT_THAT(logger1.GetLinesUnsafe(), ElementsAre("logged 1", "logged 3"));
 
@@ -309,17 +295,16 @@ TEST(ThreadCrosserTest, DifferentLoggersInSameThread) {
 
 TEST(ThreadCrosserTest, ReverseOrderOfLoggersOnStack) {
   LogText logger1;
-  const auto callback = ThreadCrosser::WrapCall([] {
-        LogText::Log("logged 1");
-      });
+  const auto callback =
+      ThreadCrosser::WrapCall([] { LogText::Log("logged 1"); });
 
   LogText logger2;
   const auto worker_call = ThreadCrosser::WrapCall([callback] {
-        // In callback(), logger1 overrides logger2, whereas in the main thread
-        // logger2 overrides logger1.
-        callback();
-        LogText::Log("logged 2");
-      });
+    // In callback(), logger1 overrides logger2, whereas in the main thread
+    // logger2 overrides logger1.
+    callback();
+    LogText::Log("logged 2");
+  });
 
   LogText logger3;
 

@@ -30,7 +30,7 @@ using capture_thread::ThreadCapture;
 class LimitEffort : public ThreadCapture<LimitEffort> {
  public:
   static bool ShouldContinue() {
-    return GetCurrent()? !GetCurrent()->LimitReached() : true;
+    return GetCurrent() ? !GetCurrent()->LimitReached() : true;
   }
 
   static void Consume(int amount) {
@@ -55,17 +55,19 @@ class LimitEffort : public ThreadCapture<LimitEffort> {
 // This implementation imposes a time-based limit.
 class LimitTime : public LimitEffort {
  public:
-  LimitTime(double seconds) :
-      seconds_(seconds),
-      start_time_(std::chrono::high_resolution_clock::now()),
-      capture_to_(this) {}
+  LimitTime(double seconds)
+      : seconds_(seconds),
+        start_time_(std::chrono::high_resolution_clock::now()),
+        capture_to_(this) {}
 
  protected:
   bool LimitReached() override {
-    const auto current_time =
-        std::chrono::high_resolution_clock::now();
-    return std::chrono::duration_cast<std::chrono::microseconds>(
-        current_time - start_time_).count() / 1000000.0 > seconds_;
+    const auto current_time = std::chrono::high_resolution_clock::now();
+    return std::chrono::duration_cast<std::chrono::microseconds>(current_time -
+                                                                 start_time_)
+                   .count() /
+               1000000.0 >
+           seconds_;
   }
 
  private:
@@ -77,18 +79,12 @@ class LimitTime : public LimitEffort {
 // This implementation imposes a counter-based limit.
 class LimitCount : public LimitEffort {
  public:
-  LimitCount(int count) :
-      count_(count),
-      capture_to_(this) {}
+  LimitCount(int count) : count_(count), capture_to_(this) {}
 
  protected:
-  bool LimitReached() override {
-    return count_ <= 0;
-  }
+  bool LimitReached() override { return count_ <= 0; }
 
-  void DecrementResources(int amount) override {
-    count_ -= amount;
-  }
+  void DecrementResources(int amount) override { count_ -= amount; }
 
  private:
   int count_;

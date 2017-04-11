@@ -40,8 +40,8 @@ class FileAdapter : public ThreadCapture<FileAdapter> {
   }
 
  protected:
-  virtual std::unique_ptr<std::istream>
-      GetReadStream(const std::string& filename) = 0;
+  virtual std::unique_ptr<std::istream> GetReadStream(
+      const std::string& filename) = 0;
 
  private:
   const ScopedCapture capture_to_;
@@ -49,13 +49,13 @@ class FileAdapter : public ThreadCapture<FileAdapter> {
 
 class FileMocker : public FileAdapter {
  public:
-  void MockFile(std::string filename,  std::string content) {
+  void MockFile(std::string filename, std::string content) {
     files_.emplace(std::move(filename), std::move(content));
   }
 
  protected:
-  std::unique_ptr<std::istream>
-      GetReadStream(const std::string& filename) override {
+  std::unique_ptr<std::istream> GetReadStream(
+      const std::string& filename) override {
     const auto mock = files_.find(filename);
     if (mock == files_.end()) {
       return nullptr;
@@ -84,14 +84,14 @@ int OpenConfigAndCountWords() {
 }
 
 int main() {
-  std::cerr << "Word count *without* mock: "
-            << OpenConfigAndCountWords() << std::endl;
+  std::cerr << "Word count *without* mock: " << OpenConfigAndCountWords()
+            << std::endl;
   {
     FileMocker mocker;
     mocker.MockFile("CMakeLists.txt", "one two three");
-    std::cerr << "Word count *with* mock: "
-              << OpenConfigAndCountWords() << std::endl;
+    std::cerr << "Word count *with* mock: " << OpenConfigAndCountWords()
+              << std::endl;
   }
-  std::cerr << "Word count *without* mock: "
-            << OpenConfigAndCountWords() << std::endl;
+  std::cerr << "Word count *without* mock: " << OpenConfigAndCountWords()
+            << std::endl;
 }

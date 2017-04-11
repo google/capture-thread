@@ -69,13 +69,9 @@ class LogText : public ThreadCapture<LogText> {
   const AutoThreadCrosser<LogText> cross_and_capture_to_;
 };
 
-void NoLogger() {
-  LogText::Log("No logger is in scope.");
-}
+void NoLogger() { LogText::Log("No logger is in scope."); }
 
-void LoggedOp() {
-  LogText::Log("The logger is in scope.");
-}
+void LoggedOp() { LogText::Log("The logger is in scope."); }
 
 void LoggedOpInThread() {
   LogText::Log("ThreadCrosser::WrapCall passes on logging.");

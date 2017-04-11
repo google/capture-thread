@@ -41,15 +41,11 @@ class LogText : public ThreadCapture<LogText> {
 
   // The public *accessing* API is non-static, and provides the accumulated
   // information in whatever format happens to be useful.
-  const std::list<std::string>& GetLines() const {
-    return lines_;
-  }
+  const std::list<std::string>& GetLines() const { return lines_; }
 
  private:
   // The private API records data when this logger is being captured to.
-  void LogLine(std::string line) {
-    lines_.emplace_back(std::move(line));
-  }
+  void LogLine(std::string line) { lines_.emplace_back(std::move(line)); }
 
   // Accumulated data.
   std::list<std::string> lines_;
@@ -60,17 +56,11 @@ class LogText : public ThreadCapture<LogText> {
   const ScopedCapture capture_to_;
 };
 
-void NoLogger() {
-  LogText::Log("No logger is in scope.");
-}
+void NoLogger() { LogText::Log("No logger is in scope."); }
 
-void LoggedOp1() {
-  LogText::Log("The logger is in scope.");
-}
+void LoggedOp1() { LogText::Log("The logger is in scope."); }
 
-void LoggedOp2() {
-  LogText::Log("It captures all lines.");
-}
+void LoggedOp2() { LogText::Log("It captures all lines."); }
 
 int main() {
   NoLogger();

@@ -32,10 +32,10 @@ using capture_thread::ThreadCrosser;
 // (See threaded.cc for more info about threading.)
 class TraceContext : public ThreadCapture<TraceContext> {
  public:
-  TraceContext(std::string name) :
-      parent_(GetCurrent()),
-      name_(std::move(name)),
-      cross_and_capture_to_(this) {}
+  TraceContext(std::string name)
+      : parent_(GetCurrent()),
+        name_(std::move(name)),
+        cross_and_capture_to_(this) {}
 
   static std::vector<std::string> GetTrace() {
     std::vector<std::string> trace;
@@ -82,14 +82,14 @@ int main() {
   // ThreadCrosser::WrapCall will capture the current frame and pass it on when
   // the callback is executed, regardless of where that happens.
   const auto execute = ThreadCrosser::WrapCall([] {
-        TraceContext trace_frame("execute");
-        PrintTrace();
-      });
+    TraceContext trace_frame("execute");
+    PrintTrace();
+  });
 
   std::thread worker_thread([execute] {
-        // Not part of the trace when execute is called.
-        TraceContext trace_frame("worker_thread");
-        execute();
-      });
+    // Not part of the trace when execute is called.
+    TraceContext trace_frame("worker_thread");
+    execute();
+  });
   worker_thread.join();
 }
