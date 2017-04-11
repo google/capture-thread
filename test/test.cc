@@ -169,6 +169,20 @@ TEST(ThreadCaptureTest, ThreadsAreNotCrossed) {
   EXPECT_THAT(logger.GetLinesUnsafe(), ElementsAre("logged 1"));
 }
 
+TEST(ThreadCaptureTest, ManualThreadCrossing) {
+  LogText logger;
+  LogText::Log("logged 1");
+
+  const LogText::ThreadBridge bridge;
+  std::thread worker([&bridge] {
+    LogText::CrossThreads logger(bridge);
+    LogText::Log("logged 2");
+  });
+  worker.join();
+
+  EXPECT_THAT(logger.GetLinesUnsafe(), ElementsAre("logged 1", "logged 2"));
+}
+
 TEST(ThreadCrosserTest, WrapCallIsFineWithoutLogger) {
   bool called = false;
   ThreadCrosser::WrapCall([&called] {
