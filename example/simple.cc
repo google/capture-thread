@@ -44,6 +44,14 @@ class LogText : public ThreadCapture<LogText> {
   const std::list<std::string>& GetLines() const { return lines_; }
 
  private:
+  // Never move or copy.
+  LogText(const LogText&) = delete;
+  LogText(LogText&&) = delete;
+  LogText& operator=(const LogText&) = delete;
+  LogText& operator=(LogText&&) = delete;
+  // Never dynamically allocate.
+  void* operator new(std::size_t size) = delete;
+
   // The private API records data when this logger is being captured to.
   void LogLine(std::string line) { lines_.emplace_back(std::move(line)); }
 

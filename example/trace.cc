@@ -46,6 +46,14 @@ class TraceContext : public ThreadCapture<TraceContext> {
   }
 
  private:
+  // Never move or copy.
+  TraceContext(const TraceContext&) = delete;
+  TraceContext(TraceContext&&) = delete;
+  TraceContext& operator=(const TraceContext&) = delete;
+  TraceContext& operator=(TraceContext&&) = delete;
+  // Never dynamically allocate.
+  void* operator new(std::size_t size) = delete;
+
   void AppendTrace(std::vector<std::string>* trace) const {
     assert(trace);
     trace->push_back(name_);
