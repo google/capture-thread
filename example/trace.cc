@@ -71,6 +71,7 @@ class TraceContext : public ThreadCapture<TraceContext> {
 
   const TraceContext* const parent_;
   const std::string name_;
+  friend class AutoThreadCrosser<TraceContext>;
   const AutoThreadCrosser<TraceContext> cross_and_capture_to_;
 };
 

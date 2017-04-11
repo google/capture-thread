@@ -64,6 +64,7 @@ class LogText : public ThreadCapture<LogText> {
   // To support threading, just add mutex protection and an AutoThreadCrosser.
   // AutoThreadCrosser ensures that logging is passed on to worker threads, but
   // *only* when the thread function is wrapped with ThreadCrosser::WrapCall.
+  // AutoThreadCrosser must be made a friend.
 
   // Note that if you implement multiple types of ThreadCapture in this way, a
   // single call to ThreadCrosser::WrapCall will pass on *all* of them that are
@@ -74,6 +75,7 @@ class LogText : public ThreadCapture<LogText> {
 
   std::mutex data_lock_;
   std::list<std::string> lines_;
+  friend class AutoThreadCrosser<LogText>;
   const AutoThreadCrosser<LogText> cross_and_capture_to_;
 };
 

@@ -59,8 +59,12 @@ class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
 
 // Enables cross-thread sharing for the given type. Use this class instead of
 // ThreadCapture<Type>::ScopedCapture when defining Type.
+// NOTE: Type must be derived from ThreadCapture<Type> for visibility reasons;
+// otherwise, you will get a compiler error. This is to ensure that you don't
+// accidentally use the wrong Type parameter, which would otherwise be possible
+// since this is a public class.
 template <class Type>
-class AutoThreadCrosser : public ThreadCrosser, public ThreadCapture<Type> {
+class AutoThreadCrosser : public ThreadCrosser {
  public:
   AutoThreadCrosser(Type* logger) : capture_to_(logger) {}
 
@@ -78,7 +82,7 @@ class AutoThreadCrosser : public ThreadCrosser, public ThreadCapture<Type> {
   }
 
  private:
-  const typename ThreadCapture<Type>::ScopedCapture capture_to_;
+  const typename Type::ScopedCapture capture_to_;
 };
 
 }  // namespace capture_thread

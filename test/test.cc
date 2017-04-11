@@ -54,6 +54,7 @@ class LogText : public ThreadCapture<LogText> {
 
   std::mutex data_lock_;
   std::list<std::string> lines_;
+  friend class AutoThreadCrosser<LogText>;
   const AutoThreadCrosser<LogText> cross_and_capture_to_;
 };
 
@@ -77,6 +78,7 @@ class LogValues : public ThreadCapture<LogValues> {
 
   std::mutex data_lock_;
   std::list<int> counts_;
+  friend class AutoThreadCrosser<LogValues>;
   const AutoThreadCrosser<LogValues> cross_and_capture_to_;
 };
 
