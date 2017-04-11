@@ -41,11 +41,20 @@ class ThreadCapture {
     Type* const capture_;
   };
 
+ protected:
+  class ScopedCapture;
+
+ public:
   class CrossThreads {
    public:
     explicit inline CrossThreads(const ThreadBridge& bridge)
         : previous_(GetCurrent()) {
       SetCurrent(bridge.capture_);
+    }
+
+    explicit inline CrossThreads(const ScopedCapture& capture)
+        : previous_(GetCurrent()) {
+      SetCurrent(capture.current_);
     }
 
     inline ~CrossThreads() { SetCurrent(previous_); }
@@ -68,7 +77,8 @@ class ThreadCapture {
 
   class ScopedCapture {
    public:
-    explicit inline ScopedCapture(Type* capture) : previous_(GetCurrent()) {
+    explicit inline ScopedCapture(Type* capture)
+        : previous_(GetCurrent()), current_(capture) {
       SetCurrent(capture);
     }
 
@@ -81,7 +91,9 @@ class ThreadCapture {
     ScopedCapture& operator=(ScopedCapture&&) = delete;
     void* operator new(std::size_t size) = delete;
 
+    friend class CrossThreads;
     Type* const previous_;
+    Type* const current_;
   };
 
  private:
