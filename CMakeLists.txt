@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 2.6)
 include_directories(
   ${CMAKE_SOURCE_DIR}/include)
 
-set(CMAKE_CXX_FLAGS "-Wall -pedantic -std=c++11 -O2 -g")
+set(CMAKE_CXX_FLAGS "-Wall -pedantic -std=c++11 -O2 -g -pthread")
 
 add_library(
   capture-thread
@@ -37,6 +37,14 @@ add_executable(
 target_link_libraries(
   mock
   capture-thread)
+
+add_executable(
+  trace
+  example/trace.cc)
+target_link_libraries(
+  trace
+  capture-thread
+  pthread)
 
 find_package(GTest)
 if(GTEST_LIBRARIES)

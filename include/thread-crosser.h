@@ -27,6 +27,9 @@ namespace capture_thread {
 
 class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
  public:
+  // NOTE: The return of WrapFunction (and its copies) must never outlive the
+  // scope that WrapFunction was called in, even if the functions are passed to
+  // other threads. This is because WrapCall captures elements of the stack.
   static std::function<void()> WrapCall(std::function<void()> call);
 
  protected:
