@@ -99,10 +99,14 @@ class BlockingCallbackQueue {
       return false;
     } else {
       const auto callback = queue_.front();
+      ++pending_;
+      queue_.pop();
+      lock.unlock();
       if (callback) {
         callback();
       }
-      queue_.pop();
+      lock.lock();
+      --pending_;
       condition_.notify_all();
       return true;
     }
@@ -110,7 +114,7 @@ class BlockingCallbackQueue {
 
   void WaitUntilEmpty() {
     std::unique_lock<std::mutex> lock(queue_lock_);
-    while (!terminated_ && !queue_.empty()) {
+    while (!terminated_ && (!queue_.empty() || pending_ > 0)) {
       condition_.wait(lock);
     }
   }
@@ -124,6 +128,7 @@ class BlockingCallbackQueue {
  private:
   std::mutex queue_lock_;
   std::condition_variable condition_;
+  int pending_ = 0;
   bool terminated_ = false;
   std::queue<std::function<void()>> queue_;
 };

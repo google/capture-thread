@@ -39,6 +39,7 @@ class CallbackQueue {
  private:
   std::mutex queue_lock_;
   std::condition_variable condition_;
+  int pending_ = 0;
   bool terminated_ = false;
   bool active_;
   std::queue<std::function<void()>> queue_;

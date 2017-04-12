@@ -38,10 +38,14 @@ bool CallbackQueue::PopAndCall() {
     return false;
   } else {
     const auto callback = queue_.front();
+    ++pending_;
+    queue_.pop();
+    lock.unlock();
     if (callback) {
       callback();
     }
-    queue_.pop();
+    lock.lock();
+    --pending_;
     condition_.notify_all();
     return true;
   }
@@ -49,7 +53,7 @@ bool CallbackQueue::PopAndCall() {
 
 void CallbackQueue::WaitUntilEmpty() {
   std::unique_lock<std::mutex> lock(queue_lock_);
-  while (!terminated_ && !queue_.empty()) {
+  while (!terminated_ && (!queue_.empty() || pending_ > 0)) {
     condition_.wait(lock);
   }
 }
