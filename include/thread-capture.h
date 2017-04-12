@@ -124,12 +124,12 @@ class ThreadCapture {
 
    protected:
     std::function<void()> WrapWithCrosser(
-        std::function<void()> call) const override;
+        std::function<void()> call) const final;
 
     std::function<void()> WrapWithContext(
-        std::function<void()> call) const override;
+        std::function<void()> call) const final;
 
-    inline ThreadCrosser* Parent() const override {
+    inline ThreadCrosser* Parent() const final {
       return cross_with_.Parent();
     }
 
