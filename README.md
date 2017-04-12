@@ -52,8 +52,9 @@ The following steps are involved in instrumenting a project:
     thread to another, wrap thread callbacks in `ThreadCrosser::WrapCall`.
 
 See the [`example`](example) directory for examples of several types of
-implementation. Unit tests in [`test`](test) also demonstrate a variety of
-features and behavior.
+implementation. [`demo`](demo) contains a larger demo spread across multiple
+files, and includes its own unit test. Lastly, unit tests in [`test`](test)
+demonstrate a wide range of usage patterns.
 
 ## Contributing
 

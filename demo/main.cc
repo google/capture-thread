@@ -45,10 +45,10 @@ void Compute(int value) {
 void QueueThread(int index, CallbackQueue* queue) {
   assert(queue);
   Tracing context((Formatter() << __func__ << '[' << index << ']').String());
-  Logging::LogLine() << "Thread " << index << " starting";
+  Logging::LogLine() << "Thread starting";
   while (queue->PopAndCall()) {
   }
-  Logging::LogLine() << "Thread " << index << " stopping";
+  Logging::LogLine() << "Thread stopping";
 }
 
 std::unique_ptr<std::thread> NewThread(std::function<void()> callback) {
