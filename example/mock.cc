@@ -48,15 +48,6 @@ class FileFactory : public ThreadCapture<FileFactory> {
   // Overrides how files are opened.
   virtual std::unique_ptr<std::istream> GetReadStream(
       const std::string& filename) = 0;
-
- private:
-  // Never move or copy.
-  FileFactory(const FileFactory&) = delete;
-  FileFactory(FileFactory&&) = delete;
-  FileFactory& operator=(const FileFactory&) = delete;
-  FileFactory& operator=(FileFactory&&) = delete;
-  // Never dynamically allocate.
-  void* operator new(std::size_t size) = delete;
 };
 
 // Replaces the default file-open behavior of FileFactory when in scope.

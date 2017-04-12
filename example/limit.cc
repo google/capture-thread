@@ -50,15 +50,6 @@ class LimitEffort : public ThreadCapture<LimitEffort> {
   // it impossible to write an implementation that doesn't automatically capture
   // logging. (For example, you might want to create a static instance to use as
   // a default when no other logger is capturing data.)
-
- private:
-  // Never move or copy.
-  LimitEffort(const LimitEffort&) = delete;
-  LimitEffort(LimitEffort&&) = delete;
-  LimitEffort& operator=(const LimitEffort&) = delete;
-  LimitEffort& operator=(LimitEffort&&) = delete;
-  // Never dynamically allocate.
-  void* operator new(std::size_t size) = delete;
 };
 
 // This implementation imposes a time-based limit.

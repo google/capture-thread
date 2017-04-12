@@ -26,6 +26,10 @@ namespace capture_thread {
 // Base class for objects that are used to share information within a thread.
 // This class provides access to an API for making an object visible within the
 // current thread until the object goes out of scope.
+// NOTE: Implementations of this class by default *cannot* be moved, copied, or
+// dynamically allocated. In addition, please do not make instances of this
+// class, or instances of its derived classes, members of any class that can be
+// dynamically allocated. Lastly, please do not statically allocate instances.
 template <class Type>
 class ThreadCapture {
  public:

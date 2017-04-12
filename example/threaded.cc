@@ -46,14 +46,6 @@ class LogText : public ThreadCapture<LogText> {
   }
 
  private:
-  // Never move or copy.
-  LogText(const LogText&) = delete;
-  LogText(LogText&&) = delete;
-  LogText& operator=(const LogText&) = delete;
-  LogText& operator=(LogText&&) = delete;
-  // Never dynamically allocate.
-  void* operator new(std::size_t size) = delete;
-
   void LogLine(std::string line) {
     std::lock_guard<std::mutex> lock(data_lock_);
     lines_.emplace_back(std::move(line));

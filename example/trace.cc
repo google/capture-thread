@@ -42,14 +42,6 @@ class TraceContext : public ThreadCapture<TraceContext> {
   }
 
  private:
-  // Never move or copy.
-  TraceContext(const TraceContext&) = delete;
-  TraceContext(TraceContext&&) = delete;
-  TraceContext& operator=(const TraceContext&) = delete;
-  TraceContext& operator=(TraceContext&&) = delete;
-  // Never dynamically allocate.
-  void* operator new(std::size_t size) = delete;
-
   // AutoThreadCrosser::Previous provides access to the next frame on the stack.
   // this can be used recursively to create a trace back to the first frame in
   // the current scope.
