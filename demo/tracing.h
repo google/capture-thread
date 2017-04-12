@@ -28,24 +28,6 @@ limitations under the License.
 
 namespace demo {
 
-class Tracing : public capture_thread::ThreadCapture<Tracing> {
- public:
-  explicit Tracing(const std::string& name)
-      : cross_and_capture_to_(this),
-        name_(JoinWithPrevious(name, cross_and_capture_to_.Previous())) {}
-
-  static std::string GetContext();
-
- private:
-  const std::string& name() const { return name_; }
-
-  static std::string JoinWithPrevious(const std::string& name,
-                                      const Tracing* previous);
-
-  const AutoThreadCrosser cross_and_capture_to_;
-  const std::string name_;
-};
-
 class Formatter {
  public:
   std::string String() const { return output_.str(); }
@@ -58,6 +40,22 @@ class Formatter {
 
  private:
   std::ostringstream output_;
+};
+
+class Tracing : public capture_thread::ThreadCapture<Tracing> {
+ public:
+  explicit Tracing(std::string name)
+      : name_(std::move(name)), cross_and_capture_to_(this) {}
+
+  static std::string GetContext();
+
+ private:
+  const std::string& name() const { return name_; }
+
+  static void ReverseTrace(const Tracing* tracer, Formatter* formatter);
+
+  const std::string name_;
+  const AutoThreadCrosser cross_and_capture_to_;
 };
 
 }  // namespace demo

@@ -16,6 +16,7 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+#include <cassert>
 #include <iostream>
 
 #include "tracing.h"
@@ -24,20 +25,21 @@ namespace demo {
 
 // static
 std::string Tracing::GetContext() {
-  if (GetCurrent()) {
-    return GetCurrent()->name();
-  } else {
-    return "";
-  }
+  Formatter formatter;
+  ReverseTrace(GetCurrent(), &formatter);
+  return formatter.String();
 }
 
 // static
-std::string Tracing::JoinWithPrevious(const std::string& name,
-                                      const Tracing* previous) {
-  if (previous) {
-    return previous->name() + ":" + name;
-  } else {
-    return name;
+void Tracing::ReverseTrace(const Tracing* tracer, Formatter* formatter) {
+  assert(formatter);
+  if (tracer) {
+    const auto previous = tracer->cross_and_capture_to_.Previous();
+    ReverseTrace(previous, formatter);
+    if (previous) {
+      *formatter << ":";
+    }
+    *formatter << tracer->name();
   }
 }
 
