@@ -46,6 +46,20 @@ class Tracing : public capture_thread::ThreadCapture<Tracing> {
   const std::string name_;
 };
 
+class Formatter {
+ public:
+  std::string String() const { return output_.str(); }
+
+  template <class Type>
+  Formatter& operator<<(Type value) {
+    static_cast<std::ostream&>(output_) << value;
+    return *this;
+  }
+
+ private:
+  std::ostringstream output_;
+};
+
 }  // namespace demo
 
 #endif  // TRACING_H_

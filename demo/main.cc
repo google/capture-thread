@@ -20,6 +20,7 @@ limitations under the License.
 #include <chrono>
 #include <list>
 #include <memory>
+#include <sstream>
 #include <thread>
 
 #include "callback-queue.h"
@@ -29,6 +30,7 @@ limitations under the License.
 using capture_thread::ThreadCrosser;
 using demo::CallbackQueue;
 using demo::CaptureLogging;
+using demo::Formatter;
 using demo::Logging;
 using demo::Tracing;
 
@@ -42,7 +44,7 @@ void Compute(int value) {
 
 void QueueThread(int index, CallbackQueue* queue) {
   assert(queue);
-  Tracing context(__func__);
+  Tracing context((Formatter() << __func__ << '[' << index << ']').String());
   Logging::LogLine() << "Thread " << index << " starting";
   while (queue->PopAndCall()) {
   }
