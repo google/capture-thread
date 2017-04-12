@@ -36,7 +36,6 @@ class ThreadCapture {
   class CrossThreads;
 
   // Allows the current object (if any) to be made available in another thread.
-  // See thread-crosser.h for canonical usage.
   class ThreadBridge {
    public:
     inline ThreadBridge() : capture_(GetCurrent()) {}
@@ -57,7 +56,6 @@ class ThreadCapture {
 
  public:
   // Provides access to an object from another thread within the current thread.
-  // See thread-crosser.h for canonical usage.
   class CrossThreads {
    public:
     explicit inline CrossThreads(const ThreadBridge& bridge)
