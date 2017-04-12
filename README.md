@@ -33,6 +33,10 @@ cause the original code to be difficult to maintain:
 This library circumvents these problems by tracking information per thread, with
 the possibility of conditionally sharing information between threads.
 
+**Most importantly, this is a framework for your loggers, tracers, and mockers,
+and not for your entire project. This means that by design it's non-intrusive,
+and doesn't require you to modify the design of your project.**
+
 ## Using
 
 This library contains a very simple framework for creating a logger, tracer, or
