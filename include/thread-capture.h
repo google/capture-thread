@@ -129,9 +129,7 @@ class ThreadCapture {
     std::function<void()> WrapWithContext(
         std::function<void()> call) const final;
 
-    inline ThreadCrosser* Parent() const final {
-      return cross_with_.Parent();
-    }
+    inline ThreadCrosser* Parent() const final { return cross_with_.Parent(); }
 
    private:
     AutoThreadCrosser(const AutoThreadCrosser&) = delete;

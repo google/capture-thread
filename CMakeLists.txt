@@ -46,6 +46,17 @@ target_link_libraries(
   capture-thread
   pthread)
 
+add_executable(
+  demo-main
+  demo/main.cc
+  demo/logging.cc
+  demo/tracing.cc
+  demo/callback-queue.cc)
+target_link_libraries(
+  demo-main
+  capture-thread
+  pthread)
+
 find_package(GTest)
 if(GTEST_LIBRARIES)
 
@@ -56,6 +67,17 @@ if(GTEST_LIBRARIES)
     test/test.cc)
   target_link_libraries(
     capture-thread-test
+    gtest gmock gtest_main
+    capture-thread pthread)
+
+  add_executable(
+    demo-test
+    demo/test.cc
+    demo/logging.cc
+    demo/tracing.cc
+    demo/callback-queue.cc)
+  target_link_libraries(
+    demo-test
     gtest gmock gtest_main
     capture-thread pthread)
 
