@@ -54,3 +54,9 @@ The following steps are involved in instrumenting a project:
 See the [`example`](example) directory for examples of several types of
 implementation. Unit tests in [`test`](test) also demonstrate a variety of
 features and behavior.
+
+## Contributing
+
+See [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines. All contributions must
+follow the Google C++ style guide at
+https://google.github.io/styleguide/cppguide.html.
