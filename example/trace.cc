@@ -33,9 +33,7 @@ using capture_thread::ThreadCrosser;
 class TraceContext : public ThreadCapture<TraceContext> {
  public:
   TraceContext(std::string name)
-      : parent_(GetCurrent()),
-        name_(std::move(name)),
-        cross_and_capture_to_(this) {}
+      : name_(std::move(name)), cross_and_capture_to_(this) {}
 
   static std::vector<std::string> GetTrace() {
     std::vector<std::string> trace;
@@ -57,19 +55,11 @@ class TraceContext : public ThreadCapture<TraceContext> {
   void AppendTrace(std::vector<std::string>* trace) const {
     assert(trace);
     trace->push_back(name_);
-    if (parent_) {
-      parent_->AppendTrace(trace);
+    if (cross_and_capture_to_.Previous()) {
+      cross_and_capture_to_.Previous()->AppendTrace(trace);
     }
   }
 
-  // Capturing the parent of this frame allows for tracing. This must *always*
-  // come before the AutoThreadCrosser (or ThreadCapture) because the latter
-  // will set this as the new context. Using a pointer to the parent (vs. using
-  // a stack of strings) allows multiple contexts to reference the same parent,
-  // e.g., if work is delegated to multiple threads. (Using only const data also
-  // makes AppendTrace thread-safe, so no mutex is needed.)
-
-  const TraceContext* const parent_;
   const std::string name_;
   friend class AutoThreadCrosser<TraceContext>;
   const AutoThreadCrosser<TraceContext> cross_and_capture_to_;

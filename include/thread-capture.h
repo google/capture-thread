@@ -90,7 +90,9 @@ class ThreadCapture {
       SetCurrent(capture);
     }
 
-    inline ~ScopedCapture() { SetCurrent(previous_); }
+    inline ~ScopedCapture() { SetCurrent(Previous()); }
+
+    Type* Previous() const { return previous_; }
 
    private:
     ScopedCapture(const ScopedCapture&) = delete;

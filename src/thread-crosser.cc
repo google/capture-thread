@@ -39,7 +39,7 @@ std::function<void()> ThreadCrosser::WrapCallRec(std::function<void()> call,
                                                  const ThreadCrosser* current) {
   if (current) {
     return WrapCallRec(current->WrapWithContext(std::move(call)),
-                       current->parent_);
+                       current->capture_to_.Previous());
   } else {
     return call;
   }

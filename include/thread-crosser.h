@@ -36,7 +36,7 @@ class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
   static std::function<void()> WrapCall(std::function<void()> call);
 
  protected:
-  ThreadCrosser() : parent_(GetCurrent()), capture_to_(this) {}
+  ThreadCrosser() : capture_to_(this) {}
   virtual ~ThreadCrosser() = default;
 
   virtual std::function<void()> WrapWithContext(
@@ -52,8 +52,6 @@ class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
   static std::function<void()> WrapCallRec(std::function<void()> call,
                                            const ThreadCrosser* current);
 
-  // parent_ must stay before capture_to_.
-  ThreadCrosser* const parent_;
   const ScopedCapture capture_to_;
 };
 
@@ -69,6 +67,8 @@ class AutoThreadCrosser : public ThreadCrosser {
   AutoThreadCrosser(Type* capture) : capture_to_(capture) {
     TypeMustInheritFromThreadCapture(capture);
   }
+
+  Type* Previous() const { return capture_to_.Previous(); }
 
  protected:
   std::function<void()> WrapWithContext(
