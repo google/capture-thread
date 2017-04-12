@@ -30,7 +30,7 @@ namespace demo {
 
 class Tracing : public capture_thread::ThreadCapture<Tracing> {
  public:
-  Tracing(const std::string& name)
+  explicit Tracing(const std::string& name)
       : cross_and_capture_to_(this),
         name_(JoinWithPrevious(name, cross_and_capture_to_.Previous())) {}
 

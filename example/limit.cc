@@ -55,7 +55,7 @@ class LimitEffort : public ThreadCapture<LimitEffort> {
 // This implementation imposes a time-based limit.
 class LimitTime : public LimitEffort {
  public:
-  LimitTime(double seconds)
+  explicit LimitTime(double seconds)
       : seconds_(seconds),
         start_time_(std::chrono::high_resolution_clock::now()),
         capture_to_(this) {}
@@ -80,7 +80,7 @@ class LimitTime : public LimitEffort {
 // This implementation imposes a counter-based limit.
 class LimitCount : public LimitEffort {
  public:
-  LimitCount(int count) : count_(count), capture_to_(this) {}
+  explicit LimitCount(int count) : count_(count), capture_to_(this) {}
 
   int ResourcesRemaining() const { return count_; }
 

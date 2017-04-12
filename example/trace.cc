@@ -30,7 +30,7 @@ using capture_thread::ThreadCrosser;
 // (See threaded.cc for more info about threading.)
 class TraceContext : public ThreadCapture<TraceContext> {
  public:
-  TraceContext(std::string name)
+  explicit TraceContext(std::string name)
       : name_(std::move(name)), cross_and_capture_to_(this) {}
 
   static std::vector<std::string> GetTrace() {
