@@ -56,9 +56,9 @@ TEST(DemoTest, IntegrationTest) {
   worker.join();
 
   EXPECT_THAT(logger.CopyLines(),
-              ElementsAre("test:worker: start", "test:thread: call 0",
-                          "test:thread: call 1", "test:thread: call 2",
-                          "test:worker: stop"));
+              ElementsAre("test:worker: start\n", "test:thread: call 0\n",
+                          "test:thread: call 1\n", "test:thread: call 2\n",
+                          "test:worker: stop\n"));
 }
 
 }  // namespace demo

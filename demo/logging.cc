@@ -33,6 +33,7 @@ Logging::LogLine::LogLine() : capture_(GetCurrent()) {
 }
 
 Logging::LogLine::~LogLine() {
+  *this << '\n';
   if (capture_) {
     capture_->AppendLine(output_.str());
   } else {
@@ -41,10 +42,7 @@ Logging::LogLine::~LogLine() {
 }
 
 // static
-void Logging::DefaultAppendLine(const std::string& line) {
-  const auto with_newline = line + "\n";  // Prevents output race condition.
-  std::cerr << with_newline;
-}
+void Logging::DefaultAppendLine(const std::string& line) { std::cerr << line; }
 
 std::list<std::string> CaptureLogging::CopyLines() {
   std::lock_guard<std::mutex> lock(data_lock_);

@@ -35,14 +35,14 @@ using demo::Tracing;
 namespace {
 
 void Compute(int value) {
-  Tracing context("Compute");
+  Tracing context(__func__);
   Logging::LogLine() << "Computing " << value;
   std::this_thread::sleep_for(std::chrono::milliseconds(value));
 }
 
 void QueueThread(int index, CallbackQueue* queue) {
   assert(queue);
-  Tracing context("QueueThread");
+  Tracing context(__func__);
   Logging::LogLine() << "Thread " << index << " starting";
   while (queue->PopAndCall()) {
   }
@@ -57,7 +57,7 @@ std::unique_ptr<std::thread> NewThread(std::function<void()> callback) {
 }  // namespace
 
 int main() {
-  Tracing context("main");
+  Tracing context(__func__);
   CallbackQueue queue(false /*active*/);
 
   for (int i = 0; i < 10; ++i) {

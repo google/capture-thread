@@ -25,7 +25,6 @@ limitations under the License.
 #include <string>
 
 #include "thread-capture.h"
-#include "thread-crosser.h"
 
 namespace demo {
 
