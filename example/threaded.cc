@@ -23,10 +23,8 @@ limitations under the License.
 #include <thread>
 
 #include "thread-capture.h"
-#include "thread-crosser.h"
 
 using capture_thread::ThreadCapture;
-using capture_thread::AutoThreadCrosser;
 using capture_thread::ThreadCrosser;
 
 // (See simple.cc for comments. The only comments here relate to threading.)
@@ -75,8 +73,7 @@ class LogText : public ThreadCapture<LogText> {
 
   std::mutex data_lock_;
   std::list<std::string> lines_;
-  friend class AutoThreadCrosser<LogText>;
-  const AutoThreadCrosser<LogText> cross_and_capture_to_;
+  const AutoThreadCrosser cross_and_capture_to_;
 };
 
 void NoLogger() { LogText::Log("No logger is in scope."); }

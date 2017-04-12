@@ -23,10 +23,8 @@ limitations under the License.
 #include <vector>
 
 #include "thread-capture.h"
-#include "thread-crosser.h"
 
 using capture_thread::ThreadCapture;
-using capture_thread::AutoThreadCrosser;
 using capture_thread::ThreadCrosser;
 
 // (See threaded.cc for more info about threading.)
@@ -52,6 +50,10 @@ class TraceContext : public ThreadCapture<TraceContext> {
   // Never dynamically allocate.
   void* operator new(std::size_t size) = delete;
 
+  // AutoThreadCrosser::Previous provides access to the next frame on the stack.
+  // this can be used recursively to create a trace back to the first frame in
+  // the current scope.
+
   void AppendTrace(std::vector<std::string>* trace) const {
     assert(trace);
     trace->push_back(name_);
@@ -61,8 +63,7 @@ class TraceContext : public ThreadCapture<TraceContext> {
   }
 
   const std::string name_;
-  friend class AutoThreadCrosser<TraceContext>;
-  const AutoThreadCrosser<TraceContext> cross_and_capture_to_;
+  const AutoThreadCrosser cross_and_capture_to_;
 };
 
 void PrintTrace() {

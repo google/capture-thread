@@ -21,14 +21,13 @@ limitations under the License.
 
 #include <functional>
 
-#include "thread-capture.h"
-
 namespace capture_thread {
 
 // Automatically makes an object shared within a single thread to be shared with
-// another thread. Use AutoThreadCrosser to add the functionality to an object,
-// then use ThreadCrosser::WrapCall to enable sharing for a specific callback.
-class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
+// another thread. Use ThreadCapture::AutoThreadCrosser to add the functionality
+// to an object, then use ThreadCrosser::WrapCall to enable sharing for a
+// specific callback.
+class ThreadCrosser {
  public:
   // NOTE: The return of WrapCall (and its copies) must never outlive the scope
   // that WrapCall was called in, even if the functions are passed to other
@@ -36,11 +35,60 @@ class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
   static std::function<void()> WrapCall(std::function<void()> call);
 
  protected:
-  ThreadCrosser() : capture_to_(this) {}
+  ThreadCrosser() = default;
   virtual ~ThreadCrosser() = default;
+
+  virtual std::function<void()> WrapWithCrosser(
+      std::function<void()> call) const = 0;
 
   virtual std::function<void()> WrapWithContext(
       std::function<void()> call) const = 0;
+
+  virtual ThreadCrosser* Parent() const = 0;
+
+  class ScopedOverride;
+
+  class ScopedCrosser {
+   public:
+    explicit inline ScopedCrosser(ThreadCrosser* capture)
+        : parent_(GetCurrent()), current_(capture) {
+      SetCurrent(capture);
+    }
+
+    inline ~ScopedCrosser() { SetCurrent(Parent()); }
+
+    inline ThreadCrosser* Parent() const { return parent_; }
+
+   private:
+    ScopedCrosser(const ScopedCrosser&) = delete;
+    ScopedCrosser(ScopedCrosser&&) = delete;
+    ScopedCrosser& operator=(const ScopedCrosser&) = delete;
+    ScopedCrosser& operator=(ScopedCrosser&&) = delete;
+    void* operator new(std::size_t size) = delete;
+
+    friend class ScopedOverride;
+    ThreadCrosser* const parent_;
+    ThreadCrosser* const current_;
+  };
+
+  class ScopedOverride {
+   public:
+    explicit inline ScopedOverride(const ScopedCrosser& crosser)
+        : parent_(GetCurrent()) {
+      SetCurrent(crosser.current_);
+    }
+
+    inline ~ScopedOverride() { SetCurrent(parent_); }
+
+   private:
+    ScopedOverride(const ScopedOverride&) = delete;
+    ScopedOverride(ScopedOverride&&) = delete;
+    ScopedOverride& operator=(const ScopedOverride&) = delete;
+    ScopedOverride& operator=(ScopedOverride&&) = delete;
+    void* operator new(std::size_t size) = delete;
+
+    ThreadCrosser* const parent_;
+  };
 
  private:
   ThreadCrosser(const ThreadCrosser&) = delete;
@@ -52,43 +100,10 @@ class ThreadCrosser : public ThreadCapture<ThreadCrosser> {
   static std::function<void()> WrapCallRec(std::function<void()> call,
                                            const ThreadCrosser* current);
 
-  const ScopedCapture capture_to_;
-};
+  static inline ThreadCrosser* GetCurrent() { return current_; }
+  static inline void SetCurrent(ThreadCrosser* value) { current_ = value; }
 
-// Enables cross-thread sharing for the given type. Use this class instead of
-// ThreadCapture<Type>::ScopedCapture when defining Type.
-// NOTE: Type must be derived from ThreadCapture<Type> for visibility reasons;
-// otherwise, you will get a compiler error. This is to ensure that you don't
-// accidentally use the wrong Type parameter, which would otherwise be possible
-// since this is a public class.
-template <class Type>
-class AutoThreadCrosser : public ThreadCrosser {
- public:
-  AutoThreadCrosser(Type* capture) : capture_to_(capture) {
-    TypeMustInheritFromThreadCapture(capture);
-  }
-
-  Type* Previous() const { return capture_to_.Previous(); }
-
- protected:
-  std::function<void()> WrapWithContext(
-      std::function<void()> call) const override {
-    if (call) {
-      return [this, call] {
-        const typename Type::CrossThreads capture(capture_to_);
-        call();
-      };
-    } else {
-      return call;
-    }
-  }
-
- private:
-  static constexpr void TypeMustInheritFromThreadCapture(
-      const ThreadCapture<Type>* capture) {}
-
-  // Type must inherit from ThreadCapture<Type>.
-  const typename Type::ScopedCapture capture_to_;
+  static thread_local ThreadCrosser* current_;
 };
 
 }  // namespace capture_thread

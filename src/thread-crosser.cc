@@ -22,13 +22,9 @@ namespace capture_thread {
 
 // static
 std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call) {
-  if (call && GetCurrent()) {
-    call = WrapCallRec(std::move(call), GetCurrent());
-    const ScopedCapture& capture_to = GetCurrent()->capture_to_;
-    return [&capture_to, call] {
-      const CrossThreads logger(capture_to);
-      call();
-    };
+  const auto current = GetCurrent();
+  if (call && current) {
+    return current->WrapWithCrosser(WrapCallRec(std::move(call), current));
   } else {
     return call;
   }
@@ -39,10 +35,13 @@ std::function<void()> ThreadCrosser::WrapCallRec(std::function<void()> call,
                                                  const ThreadCrosser* current) {
   if (current) {
     return WrapCallRec(current->WrapWithContext(std::move(call)),
-                       current->capture_to_.Previous());
+                       current->Parent());
   } else {
     return call;
   }
 }
+
+// static
+thread_local ThreadCrosser* ThreadCrosser::current_(nullptr);
 
 }  // namespace capture_thread

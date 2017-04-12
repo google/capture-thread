@@ -19,6 +19,8 @@ limitations under the License.
 #ifndef THREAD_CAPTURE_H_
 #define THREAD_CAPTURE_H_
 
+#include "thread-crosser.h"
+
 namespace capture_thread {
 
 // Base class for objects that are used to share information within a thread.
@@ -78,7 +80,10 @@ class ThreadCapture {
 
  protected:
   ThreadCapture() = default;
-  ~ThreadCapture() = default;
+  virtual ~ThreadCapture() = default;
+
+  // Gets the most-recent object from the stack of the current thread.
+  static inline Type* GetCurrent() { return current_; }
 
   // Add this as a member when defining Type (as a class), and pass 'this' to
   // the constructor to make an instance of Type available within the thread
@@ -92,7 +97,7 @@ class ThreadCapture {
 
     inline ~ScopedCapture() { SetCurrent(Previous()); }
 
-    Type* Previous() const { return previous_; }
+    inline Type* Previous() const { return previous_; }
 
    private:
     ScopedCapture(const ScopedCapture&) = delete;
@@ -106,14 +111,43 @@ class ThreadCapture {
     Type* const current_;
   };
 
-  // Gets the most-recent object from the stack of the current thread.
-  static inline Type* GetCurrent() { return current_; }
+  // Use this instead of ScopedCapture to enable automatic thread crossing when
+  // callbacks are wrapped with ThreadCrosser::WrapCall.
+  class AutoThreadCrosser : public ThreadCrosser {
+   public:
+    AutoThreadCrosser(Type* capture)
+        : cross_with_(this), capture_to_(capture) {}
+
+    inline Type* Previous() const { return capture_to_.Previous(); }
+
+   protected:
+    std::function<void()> WrapWithCrosser(
+        std::function<void()> call) const override;
+
+    std::function<void()> WrapWithContext(
+        std::function<void()> call) const override;
+
+    inline ThreadCrosser* Parent() const override {
+      return cross_with_.Parent();
+    }
+
+   private:
+    AutoThreadCrosser(const AutoThreadCrosser&) = delete;
+    AutoThreadCrosser(AutoThreadCrosser&&) = delete;
+    AutoThreadCrosser& operator=(const AutoThreadCrosser&) = delete;
+    AutoThreadCrosser& operator=(AutoThreadCrosser&&) = delete;
+    void* operator new(std::size_t size) = delete;
+
+    const ScopedCrosser cross_with_;
+    const ScopedCapture capture_to_;
+  };
 
  private:
   ThreadCapture(const ThreadCapture&) = delete;
   ThreadCapture(ThreadCapture&&) = delete;
   ThreadCapture& operator=(const ThreadCapture&) = delete;
   ThreadCapture& operator=(ThreadCapture&&) = delete;
+  void* operator new(std::size_t size) = delete;
 
   static inline void SetCurrent(Type* value) { current_ = value; }
 
@@ -122,6 +156,32 @@ class ThreadCapture {
 
 template <class Type>
 thread_local Type* ThreadCapture<Type>::current_(nullptr);
+
+template <class Type>
+std::function<void()> ThreadCapture<Type>::AutoThreadCrosser::WrapWithCrosser(
+    std::function<void()> call) const {
+  if (call) {
+    return [this, call] {
+      const ScopedOverride crosser(cross_with_);
+      call();
+    };
+  } else {
+    return call;
+  }
+}
+
+template <class Type>
+std::function<void()> ThreadCapture<Type>::AutoThreadCrosser::WrapWithContext(
+    std::function<void()> call) const {
+  if (call) {
+    return [this, call] {
+      const CrossThreads capture(capture_to_);
+      call();
+    };
+  } else {
+    return call;
+  }
+}
 
 }  // namespace capture_thread
 
