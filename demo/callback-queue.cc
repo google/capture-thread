@@ -49,7 +49,7 @@ bool CallbackQueue::PopAndCall() {
 
 void CallbackQueue::WaitUntilEmpty() {
   std::unique_lock<std::mutex> lock(queue_lock_);
-  while (!queue_.empty()) {
+  while (!terminated_ && !queue_.empty()) {
     condition_.wait(lock);
   }
 }
