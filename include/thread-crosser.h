@@ -34,7 +34,13 @@ class ThreadCrosser {
   // threads. This is because WrapCall captures elements of the stack.
   static std::function<void()> WrapCall(std::function<void()> call);
 
- protected:
+ private:
+  ThreadCrosser(const ThreadCrosser&) = delete;
+  ThreadCrosser(ThreadCrosser&&) = delete;
+  ThreadCrosser& operator=(const ThreadCrosser&) = delete;
+  ThreadCrosser& operator=(ThreadCrosser&&) = delete;
+  void* operator new(std::size_t size) = delete;
+
   ThreadCrosser() = default;
   virtual ~ThreadCrosser() = default;
 
@@ -90,13 +96,6 @@ class ThreadCrosser {
     ThreadCrosser* const parent_;
   };
 
- private:
-  ThreadCrosser(const ThreadCrosser&) = delete;
-  ThreadCrosser(ThreadCrosser&&) = delete;
-  ThreadCrosser& operator=(const ThreadCrosser&) = delete;
-  ThreadCrosser& operator=(ThreadCrosser&&) = delete;
-  void* operator new(std::size_t size) = delete;
-
   static std::function<void()> WrapCallRec(std::function<void()> call,
                                            const ThreadCrosser* current);
 
@@ -104,6 +103,9 @@ class ThreadCrosser {
   static inline void SetCurrent(ThreadCrosser* value) { current_ = value; }
 
   static thread_local ThreadCrosser* current_;
+
+  template <class Type>
+  friend class ThreadCapture;
 };
 
 }  // namespace capture_thread
