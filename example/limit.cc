@@ -48,8 +48,7 @@ class LimitEffort : public ThreadCapture<LimitEffort> {
 
   // Don't add a ScopedCapture member to the base class, because that would make
   // it impossible to write an implementation that doesn't automatically capture
-  // logging. (For example, you might want to create a static instance to use as
-  // a default when no other logger is capturing data.)
+  // logging.
 };
 
 // This implementation imposes a time-based limit.
