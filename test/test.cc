@@ -234,9 +234,9 @@ TEST(ThreadCaptureTest, ManualThreadCrossing) {
   LogTextSingleThread logger;
   LogText::Log("logged 1");
 
-  const LogTextSingleThread::ThreadBridge bridge;
+  const LogText::ThreadBridge bridge;
   std::thread worker([&bridge] {
-    LogTextSingleThread::CrossThreads logger(bridge);
+    LogText::CrossThreads logger(bridge);
     LogText::Log("logged 2");
   });
   worker.join();
