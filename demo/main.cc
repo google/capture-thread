@@ -28,7 +28,7 @@ limitations under the License.
 #include "tracing.h"
 
 using capture_thread::ThreadCrosser;
-using demo::CallbackQueue;
+using common::CallbackQueue;
 using demo::CaptureLogging;
 using demo::Formatter;
 using demo::Logging;
@@ -72,7 +72,7 @@ int main() {
 
   for (int i = 0; i < 10; ++i) {
     // One callback per unit of work that can be parallelized.
-    queue.Push(std::bind(&Compute, i));
+    queue.Push(ThreadCrosser::WrapCall(std::bind(&Compute, i)));
   }
 
   std::list<std::unique_ptr<std::thread>> threads;

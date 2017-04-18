@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 2.6)
 
 include_directories(
-  ${CMAKE_SOURCE_DIR}/include)
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/common)
 
 set(CMAKE_CXX_FLAGS "-Wall -pedantic -std=c++11 -O2 -g -pthread")
 
@@ -51,7 +52,7 @@ add_executable(
   demo/main.cc
   demo/logging.cc
   demo/tracing.cc
-  demo/callback-queue.cc)
+  common/callback-queue.cc)
 target_link_libraries(
   demo-main
   capture-thread
@@ -64,7 +65,10 @@ if(GTEST_LIBRARIES)
 
   add_executable(
     capture-thread-test
-    test/test.cc)
+    test/test.cc
+    test/log-text.cc
+    test/log-values.cc
+    common/callback-queue.cc)
   target_link_libraries(
     capture-thread-test
     gtest gmock gtest_main
@@ -75,7 +79,7 @@ if(GTEST_LIBRARIES)
     demo/test.cc
     demo/logging.cc
     demo/tracing.cc
-    demo/callback-queue.cc)
+    common/callback-queue.cc)
   target_link_libraries(
     demo-test
     gtest gmock gtest_main

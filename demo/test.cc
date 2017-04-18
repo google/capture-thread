@@ -26,6 +26,7 @@ limitations under the License.
 #include "tracing.h"
 
 using capture_thread::ThreadCrosser;
+using common::CallbackQueue;
 using testing::ElementsAre;
 
 namespace demo {
@@ -36,10 +37,10 @@ TEST(DemoTest, IntegrationTest) {
   CallbackQueue queue;
 
   for (int i = 0; i < 3; ++i) {
-    queue.Push([i] {
+    queue.Push(ThreadCrosser::WrapCall([i] {
       Tracing context("thread");
       Logging::LogLine() << "call " << i;
-    });
+    }));
   }
 
   std::thread worker(ThreadCrosser::WrapCall([&queue] {

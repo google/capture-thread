@@ -24,7 +24,7 @@ limitations under the License.
 #include <mutex>
 #include <queue>
 
-namespace demo {
+namespace common {
 
 // Queues and executes callbacks.
 class CallbackQueue {
@@ -33,7 +33,6 @@ class CallbackQueue {
   // to start the queue.
   CallbackQueue(bool active = true) : active_(active) {}
 
-  // Pushes a callback, after wrapping it for thread-crossing.
   void Push(std::function<void()> callback);
 
   // Blocks for a callback to execute, then pops and executes it. Does not block
@@ -57,6 +56,6 @@ class CallbackQueue {
   std::queue<std::function<void()>> queue_;
 };
 
-}  // namespace demo
+}  // namespace common
 
 #endif  // CALLBACK_QUEUE_H_

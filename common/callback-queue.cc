@@ -16,14 +16,11 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
-#include "thread-crosser.h"
-
 #include "callback-queue.h"
 
-namespace demo {
+namespace common {
 
 void CallbackQueue::Push(std::function<void()> callback) {
-  callback = capture_thread::ThreadCrosser::WrapCall(std::move(callback));
   std::lock_guard<std::mutex> lock(queue_lock_);
   if (!terminated_) {
     queue_.push(std::move(callback));
@@ -72,4 +69,4 @@ void CallbackQueue::Activate() {
   condition_.notify_all();
 }
 
-}  // namespace demo
+}  // namespace common

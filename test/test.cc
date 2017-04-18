@@ -30,165 +30,14 @@ limitations under the License.
 #include "thread-capture.h"
 #include "thread-crosser.h"
 
+#include "callback-queue.h"
+#include "log-text.h"
+#include "log-values.h"
+
+using common::CallbackQueue;
 using testing::ElementsAre;
 
 namespace capture_thread {
-
-// Captures text log entries.
-class LogText : public ThreadCapture<LogText> {
- public:
-  static void Log(std::string line) {
-    if (GetCurrent()) {
-      GetCurrent()->LogLine(std::move(line));
-    }
-  }
-
- protected:
-  LogText() = default;
-  virtual ~LogText() = default;
-
-  virtual void LogLine(std::string line) = 0;
-};
-
-// Captures text log entries, without automatic thread crossing.
-class LogTextSingleThread : public LogText {
- public:
-  LogTextSingleThread() : capture_to_(this) {}
-
-  const std::list<std::string>& GetLines() { return lines_; }
-
- private:
-  void LogLine(std::string line) override {
-    lines_.emplace_back(std::move(line));
-  }
-
-  std::list<std::string> lines_;
-  const ScopedCapture capture_to_;
-};
-
-// Captures text log entries, with automatic thread crossing.
-class LogTextMultiThread : public LogText {
- public:
-  LogTextMultiThread() : cross_and_capture_to_(this) {}
-
-  std::list<std::string> GetLines() {
-    std::lock_guard<std::mutex> lock(data_lock_);
-    return lines_;
-  }
-
- private:
-  void LogLine(std::string line) override {
-    std::lock_guard<std::mutex> lock(data_lock_);
-    lines_.emplace_back(std::move(line));
-  }
-
-  std::mutex data_lock_;
-  std::list<std::string> lines_;
-  const AutoThreadCrosser cross_and_capture_to_;
-};
-
-// Captures numerical log entries.
-class LogValues : public ThreadCapture<LogValues> {
- public:
-  static void Count(int count) {
-    if (GetCurrent()) {
-      GetCurrent()->LogCount(count);
-    }
-  }
-
- protected:
-  LogValues() = default;
-  virtual ~LogValues() = default;
-
-  virtual void LogCount(int count) = 0;
-};
-
-// Captures numerical log entries, without automatic thread crossing.
-class LogValuesSingleThread : public LogValues {
- public:
-  LogValuesSingleThread() : capture_to_(this) {}
-
-  const std::list<int>& GetCounts() { return counts_; }
-
- private:
-  void LogCount(int count) { counts_.emplace_back(count); }
-
-  std::list<int> counts_;
-  const ScopedCapture capture_to_;
-};
-
-// Captures numerical log entries, with automatic thread crossing.
-class LogValuesMultiThread : public LogValues {
- public:
-  LogValuesMultiThread() : cross_and_capture_to_(this) {}
-
-  std::list<int> GetCounts() {
-    std::lock_guard<std::mutex> lock(data_lock_);
-    return counts_;
-  }
-
- private:
-  void LogCount(int count) {
-    std::lock_guard<std::mutex> lock(data_lock_);
-    counts_.emplace_back(count);
-  }
-
-  std::mutex data_lock_;
-  std::list<int> counts_;
-  const AutoThreadCrosser cross_and_capture_to_;
-};
-
-// Manages a queue of callbacks shared between threads.
-class BlockingCallbackQueue {
- public:
-  void Push(std::function<void()> callback) {
-    std::lock_guard<std::mutex> lock(queue_lock_);
-    queue_.push(std::move(callback));
-    condition_.notify_all();
-  }
-
-  bool PopAndCall() {
-    std::unique_lock<std::mutex> lock(queue_lock_);
-    while (!terminated_ && queue_.empty()) {
-      condition_.wait(lock);
-    }
-    if (terminated_) {
-      return false;
-    } else {
-      const auto callback = queue_.front();
-      ++pending_;
-      queue_.pop();
-      lock.unlock();
-      if (callback) {
-        callback();
-      }
-      lock.lock();
-      --pending_;
-      condition_.notify_all();
-      return true;
-    }
-  }
-
-  void WaitUntilEmpty() {
-    std::unique_lock<std::mutex> lock(queue_lock_);
-    while (!terminated_ && (!queue_.empty() || pending_ > 0)) {
-      condition_.wait(lock);
-    }
-  }
-
-  void Terminate() {
-    std::lock_guard<std::mutex> lock(queue_lock_);
-    terminated_ = true;
-    condition_.notify_all();
-  }
-
- private:
-  std::mutex queue_lock_;
-  std::condition_variable condition_;
-  int pending_ = 0;
-  bool terminated_ = false;
-  std::queue<std::function<void()>> queue_;
-};
 
 TEST(ThreadCaptureTest, NoLoggerInterferenceWithDifferentTypes) {
   LogText::Log("not logged");
@@ -377,7 +226,7 @@ TEST(ThreadCrosserTest, MultipleThreadCrossingWithOverride) {
 }
 
 TEST(ThreadCrosserTest, DifferentLoggersInSameThread) {
-  BlockingCallbackQueue queue;
+  CallbackQueue queue;
 
   std::thread worker([&queue] {
     while (true) {
