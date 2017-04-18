@@ -26,14 +26,26 @@ limitations under the License.
 
 namespace demo {
 
+// Queues and executes callbacks.
 class CallbackQueue {
  public:
+  // If active is false, constructs the queue in a paused state. Use Activate()
+  // to start the queue.
   CallbackQueue(bool active = true) : active_(active) {}
 
+  // Pushes a callback, after wrapping it for thread-crossing.
   void Push(std::function<void()> callback);
+
+  // Blocks for a callback to execute, then pops and executes it. Does not block
+  // other callers while executing the callback. Returns false if the queue has
+  // been terminated.
   bool PopAndCall();
+
   void WaitUntilEmpty();
   void Activate();
+
+  // Informs all callers to stop using the queue. No further callbacks will be
+  // executed, even if the queue is non-empty. Makes Push a no-op.
   void Terminate();
 
  private:

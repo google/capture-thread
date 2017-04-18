@@ -28,6 +28,10 @@ limitations under the License.
 
 namespace demo {
 
+// Formats a string much like std::ostringstream, but returns a type that can
+// be directly converted to a string. For example:
+//
+//   std::string message = (Formatter() << "number: " << 1).String();
 class Formatter {
  public:
   std::string String() const { return output_.str(); }
@@ -42,11 +46,18 @@ class Formatter {
   std::ostringstream output_;
 };
 
+// Adds a named tracing scope while the object is in scope.
 class Tracing : public capture_thread::ThreadCapture<Tracing> {
  public:
   explicit Tracing(std::string name)
       : name_(std::move(name)), cross_and_capture_to_(this) {}
 
+  // Returns the current context as a ":"-joined concatenation of the names of
+  // the current Tracing objects in scope. For example:
+  //
+  //   Tracing scope1("scope1");
+  //   Tracing scope2("scope2");
+  //   std::cerr << Tracing::GetContext();  // "scope1:scope2"
   static std::string GetContext();
 
  private:

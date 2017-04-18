@@ -25,8 +25,10 @@ namespace demo {
 void CallbackQueue::Push(std::function<void()> callback) {
   callback = capture_thread::ThreadCrosser::WrapCall(std::move(callback));
   std::lock_guard<std::mutex> lock(queue_lock_);
-  queue_.push(std::move(callback));
-  condition_.notify_all();
+  if (!terminated_) {
+    queue_.push(std::move(callback));
+    condition_.notify_all();
+  }
 }
 
 bool CallbackQueue::PopAndCall() {

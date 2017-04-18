@@ -28,8 +28,13 @@ limitations under the License.
 
 namespace demo {
 
+// Provides a text-logging mechanism. By default sends data to stderr. Use
+// CaptureLogging to capture logged data.
 class Logging : public capture_thread::ThreadCapture<Logging> {
  public:
+  // Formats and logs a line. Operates as a std::ostream. For example:
+  //
+  //   Logging::LogLine() << "Log message.";
   class LogLine {
    public:
     LogLine();
@@ -55,10 +60,12 @@ class Logging : public capture_thread::ThreadCapture<Logging> {
   static void DefaultAppendLine(const std::string& line);
 };
 
+// Captures lines logged with Logging while in scope.
 class CaptureLogging : public Logging {
  public:
   CaptureLogging() : cross_and_capture_to_(this) {}
 
+  // Returns a copy of all lines captured.
   std::list<std::string> CopyLines();
 
  protected:
