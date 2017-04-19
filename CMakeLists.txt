@@ -33,6 +33,13 @@ target_link_libraries(
   capture-thread)
 
 add_executable(
+  paths
+  example/paths.cc)
+target_link_libraries(
+  paths
+  capture-thread)
+
+add_executable(
   mock
   example/mock.cc)
 target_link_libraries(
