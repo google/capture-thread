@@ -97,7 +97,6 @@ class InRootPath : public Path {
   std::string RootPath() const override { return root_path_; }
 
   void AppendLocalPath(PathBuilder* builder) const override {
-    assert(builder);
     const auto previous = capture_to_.Previous();
     if (previous) {
       DelegateLocalPath(*previous, builder);
@@ -137,7 +136,7 @@ class InLocalPath : public Path {
 
 // Simulates installing project binaries.
 void InstallBin(const std::vector<std::string>& targets) {
-  InLocalPath file("bin");
+  InLocalPath path("bin");
   for (const auto& target : targets) {
     InLocalPath file(target);
     std::cerr << "Installing binary " << Path::Working() << std::endl;
@@ -146,7 +145,7 @@ void InstallBin(const std::vector<std::string>& targets) {
 
 // Simulates installing project libraries.
 void InstallLib(const std::vector<std::string>& targets) {
-  InLocalPath file("lib");
+  InLocalPath path("lib");
   for (const auto& target : targets) {
     InLocalPath file(target);
     std::cerr << "Installing library " << Path::Working() << std::endl;
