@@ -11,6 +11,35 @@ add_library(
   src/thread-crosser.cc)
 
 add_executable(
+  async
+  example/async.cc)
+target_link_libraries(
+  async
+  capture-thread
+  pthread)
+
+add_executable(
+  limit
+  example/limit.cc)
+target_link_libraries(
+  limit
+  capture-thread)
+
+add_executable(
+  mock
+  example/mock.cc)
+target_link_libraries(
+  mock
+  capture-thread)
+
+add_executable(
+  paths
+  example/paths.cc)
+target_link_libraries(
+  paths
+  capture-thread)
+
+add_executable(
   simple
   example/simple.cc)
 target_link_libraries(
@@ -24,27 +53,6 @@ target_link_libraries(
   threaded
   capture-thread
   pthread)
-
-add_executable(
-  limit
-  example/limit.cc)
-target_link_libraries(
-  limit
-  capture-thread)
-
-add_executable(
-  paths
-  example/paths.cc)
-target_link_libraries(
-  paths
-  capture-thread)
-
-add_executable(
-  mock
-  example/mock.cc)
-target_link_libraries(
-  mock
-  capture-thread)
 
 add_executable(
   trace
