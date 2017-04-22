@@ -64,4 +64,6 @@ demonstrate a wide range of usage patterns.
 
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines. All contributions must
 follow the Google C++ style guide at
-https://google.github.io/styleguide/cppguide.html.
+https://google.github.io/styleguide/cppguide.html. **Contributions should be
+made to the [`current`](../../tree/current) branch, which will periodically be
+merged with [`master`](../../tree/master) after a more thorough review.**
