@@ -59,7 +59,7 @@ class Reporter : public ThreadCapture<Reporter> {
 // Captures reports, but writes them asynchronously to avoid blocking.
 class ReportAsync : public Reporter {
  public:
-  ReportAsync() : capture_to_(this) {}
+  ReportAsync() : cross_and_capture_to_(this) {}
 
   ~ReportAsync() {
     {
@@ -133,7 +133,7 @@ class ReportAsync : public Reporter {
   // here and reject reports if that's exceeded.
   std::queue<Report> queue_;
   std::unique_ptr<std::thread> reporter_thread_;
-  const ScopedCapture capture_to_;
+  const AutoThreadCrosser cross_and_capture_to_;
 };
 
 // Simulates a service that process external requests.
@@ -156,14 +156,12 @@ class DataService {
     report.emplace_back(formatted.str());
     Reporter::Send(std::move(report));
   }
-
- private:
-  // Report access for auditing.
-  ReportAsync reporter;
 };
 
-
 int main() {
+  // Enable reporting globally.
+  ReportAsync reporter;
+
   DataService service;
   for (int i = 0; i < 10; ++i) {
     // Simulates a latency-sensitive request to the service.
