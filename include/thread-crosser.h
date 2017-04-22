@@ -34,6 +34,55 @@ class ThreadCrosser {
   // threads. This is because WrapCall captures elements of the stack.
   static std::function<void()> WrapCall(std::function<void()> call);
 
+#ifdef CAPTURE_THREAD_EXPERIMENTAL
+
+  // Sets a global override based on the current scope. Use this *only* in
+  // situations where you cannot pass a function that has been wrapped with
+  // WrapCall to a thread. (For example, if you are using another framework that
+  // manages its own threads, and cannot pass a std::function from the main
+  // thread to the worker thread.) Instantiate this class to capture the current
+  // scope, and use UseGlobalOverride to wrap calls.
+  // NOTE: Use with caution! This class is not thread-safe and should therefore
+  // be instantiated no more than once, no matter what.
+  class SetGlobalOverride {
+   public:
+    SetGlobalOverride();
+    ~SetGlobalOverride();
+
+   private:
+    SetGlobalOverride(const SetGlobalOverride&) = delete;
+    SetGlobalOverride(SetGlobalOverride&&) = delete;
+    SetGlobalOverride& operator=(const SetGlobalOverride&) = delete;
+    SetGlobalOverride& operator=(SetGlobalOverride&&) = delete;
+    void* operator new(std::size_t size) = delete;
+
+    ThreadCrosser* const current_;
+  };
+
+  // Allows the current thread to access the scope override set in the main
+  // thread with SetGlobalOverride. Even though SetGlobalOverride isn't thread-
+  // safe, this class is; *however*, instances of this class must never
+  // outlive any SetGlobalOverride instance.
+  class UseGlobalOverride {
+   public:
+    UseGlobalOverride();
+    ~UseGlobalOverride();
+
+    // Wraps the call with the current global override, then calls it.
+    void Call(std::function<void()> call) const;
+
+   private:
+    UseGlobalOverride(const UseGlobalOverride&) = delete;
+    UseGlobalOverride(UseGlobalOverride&&) = delete;
+    UseGlobalOverride& operator=(const UseGlobalOverride&) = delete;
+    UseGlobalOverride& operator=(UseGlobalOverride&&) = delete;
+    void* operator new(std::size_t size) = delete;
+
+    ThreadCrosser* const current_;
+  };
+
+#endif  // CAPTURE_THREAD_EXPERIMENTAL
+
  private:
   ThreadCrosser(const ThreadCrosser&) = delete;
   ThreadCrosser(ThreadCrosser&&) = delete;

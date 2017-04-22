@@ -27,8 +27,9 @@ limitations under the License.
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
+#define CAPTURE_THREAD_EXPERIMENTAL
 #include "thread-capture.h"
-#include "thread-crosser.h"
+#undef CAPTURE_THREAD_EXPERIMENTAL
 
 #include "callback-queue.h"
 #include "log-text.h"
@@ -290,6 +291,41 @@ TEST(ThreadCrosserTest, ReverseOrderOfLoggersOnStack) {
   EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1", "logged 1"));
   EXPECT_THAT(logger2.GetLines(), ElementsAre("logged 2", "logged 2"));
   EXPECT_THAT(logger3.GetLines(), ElementsAre());
+}
+
+TEST(ThreadCrosserTest, CanonicalGlobalOverride) {
+  LogTextMultiThread logger;
+  ThreadCrosser::SetGlobalOverride set_override;
+
+  std::thread unwrapped_worker([] {
+    ThreadCrosser::UseGlobalOverride use_override;
+    use_override.Call([] {
+      LogText::Log("logged 1");
+    });
+  });
+  unwrapped_worker.join();
+
+  EXPECT_THAT(logger.GetLines(), ElementsAre("logged 1"));
+}
+
+TEST(ThreadCrosserTest, GlobalOverrideIndependentOfNormalScope) {
+  LogTextMultiThread logger1;
+  ThreadCrosser::SetGlobalOverride set_override;
+
+  std::thread unwrapped_worker([] {
+    ThreadCrosser::UseGlobalOverride use_override;
+    LogTextMultiThread logger2;
+    use_override.Call([] {
+      LogText::Log("logged 1");
+    });
+    use_override.Call(ThreadCrosser::WrapCall([] {
+      LogText::Log("logged 2");
+    }));
+    EXPECT_THAT(logger2.GetLines(), ElementsAre("logged 2"));
+  });
+  unwrapped_worker.join();
+
+  EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1"));
 }
 
 }  // namespace capture_thread

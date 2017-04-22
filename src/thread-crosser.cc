@@ -16,9 +16,19 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+#define CAPTURE_THREAD_EXPERIMENTAL
 #include "thread-crosser.h"
+#undef CAPTURE_THREAD_EXPERIMENTAL
+
+#include <cassert>
 
 namespace capture_thread {
+
+namespace {
+
+ThreadCrosser* global_override(nullptr);
+
+}  // namespace
 
 // static
 std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call) {
@@ -38,6 +48,31 @@ std::function<void()> ThreadCrosser::WrapCallRec(std::function<void()> call,
                        current->Parent());
   } else {
     return call;
+  }
+}
+
+ThreadCrosser::SetGlobalOverride::SetGlobalOverride()
+    : current_(GetCurrent()) {
+  assert(global_override == nullptr);
+  global_override = current_;
+}
+
+ThreadCrosser::SetGlobalOverride::~SetGlobalOverride() {
+  assert(global_override == current_);
+  global_override = nullptr;
+}
+
+ThreadCrosser::UseGlobalOverride::UseGlobalOverride()
+    : current_(global_override) {}
+
+ThreadCrosser::UseGlobalOverride::~UseGlobalOverride() {
+  assert(global_override == current_);
+}
+
+void ThreadCrosser::UseGlobalOverride::Call(std::function<void()> call) const {
+  call = WrapCallRec(std::move(call), current_);
+  if (call) {
+    call();
   }
 }
 
