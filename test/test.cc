@@ -309,23 +309,29 @@ TEST(ThreadCrosserTest, CanonicalGlobalOverride) {
 }
 
 TEST(ThreadCrosserTest, GlobalOverrideIndependentOfNormalScope) {
-  LogTextMultiThread logger1;
+  LogTextMultiThread text_logger1;
   ThreadCrosser::SetGlobalOverride set_override;
 
   std::thread unwrapped_worker([] {
     ThreadCrosser::UseGlobalOverride use_override;
-    LogTextMultiThread logger2;
+    LogTextMultiThread text_logger2;
+    LogValuesMultiThread count_logger;
+    // Global override of LogText but not LogValues.
     use_override.Call([] {
       LogText::Log("logged 1");
+      LogValues::Count(1);
     });
+    // Local scope supercedes global override of LogText.
     use_override.Call(ThreadCrosser::WrapCall([] {
       LogText::Log("logged 2");
+      LogValues::Count(2);
     }));
-    EXPECT_THAT(logger2.GetLines(), ElementsAre("logged 2"));
+    EXPECT_THAT(text_logger2.GetLines(), ElementsAre("logged 2"));
+    EXPECT_THAT(count_logger.GetCounts(), ElementsAre(1, 2));
   });
   unwrapped_worker.join();
 
-  EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1"));
+  EXPECT_THAT(text_logger1.GetLines(), ElementsAre("logged 1"));
 }
 
 }  // namespace capture_thread
