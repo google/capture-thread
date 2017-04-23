@@ -57,22 +57,16 @@ class ThreadCrosser {
     ThreadCrosser* const current_;
   };
 
- private:
-  class ScopedCrosser;
-
  public:
   // Allows the current thread to access the scope override set in the main
   // thread with SetOverride. An instance of this class must never outlive the
   // SetOverride instance it was constructed with.
   class UseOverride {
    public:
-    explicit UseOverride(const ScopedCrosser& crosser);
     explicit UseOverride(const SetOverride& crosser);
 
     // Wraps the call with the current override, then calls it.
     void Call(std::function<void()> call) const;
-
-    inline ~UseOverride() { SetCurrent(parent_); }
 
    private:
     UseOverride(const UseOverride&) = delete;
@@ -81,7 +75,6 @@ class ThreadCrosser {
     UseOverride& operator=(UseOverride&&) = delete;
     void* operator new(std::size_t size) = delete;
 
-    ThreadCrosser* const parent_;
     ThreadCrosser* const current_;
   };
 
@@ -103,6 +96,27 @@ class ThreadCrosser {
 
   virtual ThreadCrosser* Parent() const = 0;
 
+  class ScopedCrosser;
+
+  class DelegateCrosser {
+   public:
+    explicit inline DelegateCrosser(const ScopedCrosser& crosser)
+        : parent_(GetCurrent()) {
+      SetCurrent(crosser.current_);
+    }
+
+    inline ~DelegateCrosser() { SetCurrent(parent_); }
+
+   private:
+    DelegateCrosser(const DelegateCrosser&) = delete;
+    DelegateCrosser(DelegateCrosser&&) = delete;
+    DelegateCrosser& operator=(const DelegateCrosser&) = delete;
+    DelegateCrosser& operator=(DelegateCrosser&&) = delete;
+    void* operator new(std::size_t size) = delete;
+
+    ThreadCrosser* const parent_;
+  };
+
   class ScopedCrosser {
    public:
     explicit inline ScopedCrosser(ThreadCrosser* capture)
@@ -121,7 +135,7 @@ class ThreadCrosser {
     ScopedCrosser& operator=(ScopedCrosser&&) = delete;
     void* operator new(std::size_t size) = delete;
 
-    friend class UseOverride;
+    friend class DelegateCrosser;
     ThreadCrosser* const parent_;
     ThreadCrosser* const current_;
   };
