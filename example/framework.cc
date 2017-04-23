@@ -90,7 +90,7 @@ class ThirdPartyFramework {
     // same thread that the ServerInterface was constructed in. (This is
     // actually the entire motivation for this example.)
     std::thread worker_thread([&] {
-      for (const auto query : faked_queries) {
+      for (const auto& query : faked_queries) {
         interface_->HandleQuery(query);
       }
     });
