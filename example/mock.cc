@@ -16,6 +16,9 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+// This example demonstrates how the framework can be used to mock resources
+// that are otherwise handled by non-trivial default functionality.
+
 #include <fstream>
 #include <iostream>
 #include <memory>

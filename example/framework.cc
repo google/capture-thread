@@ -16,6 +16,12 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+// This example demonstrates how to work around a third-party framework that
+// doesn't expose thread logic to the users of the framework. For example, an
+// HTTP server framework might allow the user to implement a handler that it
+// will call from an aribtrary thread. This should only be done in situations
+// where the example in threaded.cc won't work.
+
 #include <cassert>
 #include <iostream>
 #include <list>

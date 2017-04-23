@@ -16,6 +16,10 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+// This is a proof-of-concept example of how the framework could be used to
+// limit the amount of effort expended by a computation. We do not expect this
+// to be a widely-used use-case.
+
 #include <chrono>
 #include <iostream>
 #include <list>
