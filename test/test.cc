@@ -291,6 +291,47 @@ TEST(ThreadCrosserTest, ReverseOrderOfLoggersOnStack) {
   EXPECT_THAT(logger3.GetLines(), ElementsAre());
 }
 
+TEST(ThreadCrosserTest, ManualCrosserOverride) {
+  LogTextMultiThread logger;
+  ThreadCrosser::SetOverride set_override;
+
+  std::thread unwrapped_worker([&set_override] {
+    ThreadCrosser::UseOverride use_override(set_override);
+    use_override.Call([] {
+      LogText::Log("logged 1");
+    });
+  });
+  unwrapped_worker.join();
+
+  EXPECT_THAT(logger.GetLines(), ElementsAre("logged 1"));
+}
+
+TEST(ThreadCrosserTest, ManualOverrideIndependentOfNormalScope) {
+  LogTextMultiThread text_logger1;
+  ThreadCrosser::SetOverride set_override;
+
+  std::thread unwrapped_worker([&set_override] {
+    ThreadCrosser::UseOverride use_override(set_override);
+    LogTextMultiThread text_logger2;
+    LogValuesMultiThread count_logger;
+    // Global override of LogText but not LogValues.
+    use_override.Call([] {
+      LogText::Log("logged 1");
+      LogValues::Count(1);
+    });
+    // Local scope supercedes global override of LogText.
+    use_override.Call(ThreadCrosser::WrapCall([] {
+      LogText::Log("logged 2");
+      LogValues::Count(2);
+    }));
+    EXPECT_THAT(text_logger2.GetLines(), ElementsAre("logged 2"));
+    EXPECT_THAT(count_logger.GetCounts(), ElementsAre(1, 2));
+  });
+  unwrapped_worker.join();
+
+  EXPECT_THAT(text_logger1.GetLines(), ElementsAre("logged 1"));
+}
+
 }  // namespace capture_thread
 
 int main(int argc, char* argv[]) {
