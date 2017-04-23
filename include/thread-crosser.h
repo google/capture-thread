@@ -26,7 +26,8 @@ namespace capture_thread {
 // Automatically makes an object shared within a single thread to be shared with
 // another thread. Use ThreadCapture::AutoThreadCrosser to add the functionality
 // to an object, then use ThreadCrosser::WrapCall to enable sharing for a
-// specific callback.
+// specific callback. All nested classes are thread-safe and can be made const
+// without losing functionality.
 class ThreadCrosser {
  public:
   // NOTE: The return of WrapCall (and its copies) must never outlive the scope
