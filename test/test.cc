@@ -293,11 +293,10 @@ TEST(ThreadCrosserTest, ReverseOrderOfLoggersOnStack) {
 
 TEST(ThreadCrosserTest, ManualCrosserOverride) {
   LogTextMultiThread logger;
-  ThreadCrosser::SetOverride set_override;
+  const ThreadCrosser::SetOverride override_point;
 
-  std::thread unwrapped_worker([&set_override] {
-    ThreadCrosser::UseOverride use_override(set_override);
-    use_override.Call([] {
+  std::thread unwrapped_worker([&override_point] {
+    override_point.Call([] {
       LogText::Log("logged 1");
     });
   });
@@ -308,19 +307,18 @@ TEST(ThreadCrosserTest, ManualCrosserOverride) {
 
 TEST(ThreadCrosserTest, ManualOverrideIndependentOfNormalScope) {
   LogTextMultiThread text_logger1;
-  ThreadCrosser::SetOverride set_override;
+  const ThreadCrosser::SetOverride override_point;
 
-  std::thread unwrapped_worker([&set_override] {
-    ThreadCrosser::UseOverride use_override(set_override);
+  std::thread unwrapped_worker([&override_point] {
     LogTextMultiThread text_logger2;
     LogValuesMultiThread count_logger;
     // Global override of LogText but not LogValues.
-    use_override.Call([] {
+    override_point.Call([] {
       LogText::Log("logged 1");
       LogValues::Count(1);
     });
     // Local scope supercedes global override of LogText.
-    use_override.Call(ThreadCrosser::WrapCall([] {
+    override_point.Call(ThreadCrosser::WrapCall([] {
       LogText::Log("logged 2");
       LogValues::Count(2);
     }));

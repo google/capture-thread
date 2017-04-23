@@ -43,10 +43,7 @@ std::function<void()> ThreadCrosser::WrapCallRec(std::function<void()> call,
   }
 }
 
-ThreadCrosser::UseOverride::UseOverride(const SetOverride& crosser)
-    : current_(crosser.current_) {}
-
-void ThreadCrosser::UseOverride::Call(std::function<void()> call) const {
+void ThreadCrosser::SetOverride::Call(std::function<void()> call) const {
   call = WrapCallRec(std::move(call), current_);
   if (call) {
     call();
