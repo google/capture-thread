@@ -162,7 +162,7 @@ std::function<void()> ThreadCapture<Type>::AutoThreadCrosser::WrapWithCrosser(
     std::function<void()> call) const {
   if (call) {
     return [this, call] {
-      const ScopedOverride crosser(cross_with_);
+      const UseOverride crosser(cross_with_);
       call();
     };
   } else {

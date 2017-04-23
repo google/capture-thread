@@ -27,9 +27,7 @@ limitations under the License.
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
 
-#define CAPTURE_THREAD_EXPERIMENTAL
 #include "thread-capture.h"
-#undef CAPTURE_THREAD_EXPERIMENTAL
 
 #include "callback-queue.h"
 #include "log-text.h"
@@ -293,12 +291,12 @@ TEST(ThreadCrosserTest, ReverseOrderOfLoggersOnStack) {
   EXPECT_THAT(logger3.GetLines(), ElementsAre());
 }
 
-TEST(ThreadCrosserTest, CanonicalGlobalOverride) {
+TEST(ThreadCrosserTest, ManualCrosserOverride) {
   LogTextMultiThread logger;
-  ThreadCrosser::SetGlobalOverride set_override;
+  ThreadCrosser::SetOverride set_override;
 
-  std::thread unwrapped_worker([] {
-    ThreadCrosser::UseGlobalOverride use_override;
+  std::thread unwrapped_worker([&set_override] {
+    ThreadCrosser::UseOverride use_override(set_override);
     use_override.Call([] {
       LogText::Log("logged 1");
     });
@@ -308,12 +306,12 @@ TEST(ThreadCrosserTest, CanonicalGlobalOverride) {
   EXPECT_THAT(logger.GetLines(), ElementsAre("logged 1"));
 }
 
-TEST(ThreadCrosserTest, GlobalOverrideIndependentOfNormalScope) {
+TEST(ThreadCrosserTest, ManualOverrideIndependentOfNormalScope) {
   LogTextMultiThread text_logger1;
-  ThreadCrosser::SetGlobalOverride set_override;
+  ThreadCrosser::SetOverride set_override;
 
-  std::thread unwrapped_worker([] {
-    ThreadCrosser::UseGlobalOverride use_override;
+  std::thread unwrapped_worker([&set_override] {
+    ThreadCrosser::UseOverride use_override(set_override);
     LogTextMultiThread text_logger2;
     LogValuesMultiThread count_logger;
     // Global override of LogText but not LogValues.
