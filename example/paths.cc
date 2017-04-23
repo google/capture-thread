@@ -16,6 +16,10 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+// This is a proof-of-concept example of how the framework could be used to keep
+// track of a directory structure in a decentralized way, e.g., in a tool that
+// installs a project in a user-specified root directory.
+
 #include <cassert>
 #include <iostream>
 #include <sstream>

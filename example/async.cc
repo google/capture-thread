@@ -16,6 +16,11 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+// This example demonstrates how you might implement asynchronous reporting,
+// e.g., in cases where the reporting process is too costly to be done
+// synchronously. The callers of the reporting API aren't blocked by the sending
+// of the report, which is handled separately by a dedicated reporting thread.
+
 #include <cassert>
 #include <chrono>
 #include <condition_variable>

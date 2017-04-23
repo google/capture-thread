@@ -16,6 +16,9 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+// This example demonstrates how the framework might be used for call tracing,
+// by incrementally creating a call stack.
+
 #include <cassert>
 #include <iostream>
 #include <string>

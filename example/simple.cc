@@ -16,6 +16,10 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+// This is a minimal example of basic usage of the framework. Use this only in
+// cases where you do not need (or want) functionality to cross threads. See
+// threaded.cc for an example of crossing threads.
+
 #include <iostream>
 #include <list>
 #include <string>

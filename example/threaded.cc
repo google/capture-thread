@@ -16,6 +16,10 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+// This is a minimal example of creating functionality that can cross threads.
+// This is in contrast to simple.cc, which is strictly compartmentalized to
+// individual threads.
+
 #include <iostream>
 #include <list>
 #include <mutex>

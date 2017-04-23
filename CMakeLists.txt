@@ -19,6 +19,14 @@ target_link_libraries(
   pthread)
 
 add_executable(
+  framework
+  example/framework.cc)
+target_link_libraries(
+  framework
+  capture-thread
+  pthread)
+
+add_executable(
   limit
   example/limit.cc)
 target_link_libraries(
