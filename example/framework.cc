@@ -103,7 +103,7 @@ class ThirdPartyFramework {
 
 // Utilizing the third-party framework is done by implementing the limited
 // interface the framework provides. Instances of this class should never
-// outlive the scope that they are created in; see the override_point below.
+// outlive the scope that they are created in; see the override_point_ below.
 class MyServer : public ThirdPartyFramework::ServerInterface {
  public:
   void HandleQuery(const std::string& query) override {
@@ -113,8 +113,8 @@ class MyServer : public ThirdPartyFramework::ServerInterface {
     // 2. SetOverride::Call actually calls the function that is passed to it.
     // 3. SetOverride::Call is called from the worker thread, whereas
     //    ThreadCrosser::WrapCall is called from the main thread.
-    override_point.Call([&] {
-      // Within this lambda, the scope override-point set by override_point is
+    override_point_.Call([&] {
+      // Within this lambda, the scope override-point set by override_point_ is
       // temporarily used. Call doesn't need to wrap the entire implementation;
       // presumably you'll know exactly what functionality needs access to the
       // scope that is being passed along. (Again, SetOverride should really
@@ -123,14 +123,14 @@ class MyServer : public ThirdPartyFramework::ServerInterface {
                 << query << "\"" << std::endl;
       LogUsage::Query(query);
     });
-    // Outside of the Call, override_point has no effect.
+    // Outside of the Call, override_point_ has no effect.
   }
 
  private:
   // ThreadCrosser::SetOverride will capture the current scope when the
   // constructor is called. This makes that scope available to this class when
   // the framework makes calls to the API in different threads.
-  const ThreadCrosser::SetOverride override_point;
+  const ThreadCrosser::SetOverride override_point_;
 };
 
 int main() {
