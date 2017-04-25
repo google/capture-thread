@@ -27,6 +27,13 @@ target_link_libraries(
   pthread)
 
 add_executable(
+  inherit
+  example/inherit.cc)
+target_link_libraries(
+  inherit
+  capture-thread)
+
+add_executable(
   limit
   example/limit.cc)
 target_link_libraries(
