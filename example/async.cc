@@ -144,13 +144,9 @@ class ReportAsync : public Reporter {
 // Simulates a service that process external requests.
 class DataService {
  public:
-  DataService() {
-    std::cerr << "Starting DataService." << std::endl;
-  }
+  DataService() { std::cerr << "Starting DataService." << std::endl; }
 
-  ~DataService() {
-    std::cerr << "Stopping DataService." << std::endl;
-  }
+  ~DataService() { std::cerr << "Stopping DataService." << std::endl; }
 
   // An arbitrary latency-sensitive operation that should not be blocked by the
   // reporting process.
