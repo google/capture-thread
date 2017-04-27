@@ -16,6 +16,9 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+#ifndef LOG_VALUES_H_
+#define LOG_VALUES_H_
+
 #include <list>
 #include <mutex>
 
@@ -66,3 +69,5 @@ class LogValuesMultiThread : public LogValues {
 };
 
 }  // namespace capture_thread
+
+#endif  // LOG_VALUES_H_
