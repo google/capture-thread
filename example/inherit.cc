@@ -16,9 +16,15 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+// ***Although this example is technically safe, its use is a potential
+// indicator of bad design, due to scope ambiguity.*** As such, please treat
+// this example as experimental, and seriously reconsider your design before
+// using this design pattern.
+
 // This is a proof-of-concept example of how you might inherit the object that
-// is currently being captured to. This use-case requires some more thought, so
-// this example will likely become obsolete.
+// is currently being captured to. For example your API might have multiple
+// entry points that delegate to each other, but that requires exactly one
+// report per call made to the API.
 
 #include <iostream>
 #include <list>
@@ -36,9 +42,7 @@ class LogText : public ThreadCapture<LogText> {
     kInherit,  // Logging should be delegated to the existing logger.
   };
 
-  LogText(InheritType type)
-      : type_(type),
-        capture_to_(type_ == InheritType::kInherit ? GetCurrent() : this) {}
+  LogText(InheritType type) : type_(type), capture_to_(this) {}
 
   static void Log(std::string line) {
     if (GetCurrent()) {
@@ -46,30 +50,54 @@ class LogText : public ThreadCapture<LogText> {
     }
   }
 
-  const std::list<std::string>& GetLines() const {
-    if (type_ == InheritType::kInherit && capture_to_.Previous()) {
-      return capture_to_.Previous()->lines_;
-    } else {
-      return lines_;
-    }
-  }
+  const std::list<std::string>& GetLines() const { return Delegate()->lines_; }
 
  private:
-  void LogLine(std::string line) { lines_.emplace_back(std::move(line)); }
+  void LogLine(std::string line) {
+    Delegate()->lines_.emplace_back(std::move(line));
+  }
+
+  LogText* Delegate() {
+    if (type_ == InheritType::kInherit && capture_to_.Previous()) {
+      return capture_to_.Previous()->Delegate();
+    }
+    return this;
+  }
+
+  const LogText* Delegate() const {
+    if (type_ == InheritType::kInherit && capture_to_.Previous()) {
+      return capture_to_.Previous()->Delegate();
+    }
+    return this;
+  }
 
   std::list<std::string> lines_;
   const InheritType type_;
   const ScopedCapture capture_to_;
 };
 
+void QueryHandler1(const std::string& query) {
+  LogText logger(LogText::InheritType::kInherit);
+  LogText::Log("QueryHandler1 called: " + query);
+  for (const auto& line : logger.GetLines()) {
+    std::cerr << "Available from QueryHandler1: \"" << line << "\""
+              << std::endl;
+  }
+}
+
+void QueryHandler2(const std::string& query) {
+  LogText logger(LogText::InheritType::kNew);
+  LogText::Log("QueryHandler2 called: " + query);
+  QueryHandler1(query + "!!!");
+  for (const auto& line : logger.GetLines()) {
+    std::cerr << "Available from QueryHandler2: \"" << line << "\""
+              << std::endl;
+  }
+}
+
 int main() {
-  LogText logger1(LogText::InheritType::kNew);
-  LogText::Log("Captured to logger1.");
-  {
-    LogText logger2(LogText::InheritType::kInherit);
-    LogText::Log("Also captured to logger1, due to delegation.");
-  }
-  for (const auto& line : logger1.GetLines()) {
-    std::cerr << "Captured: " << line << std::endl;
-  }
+  std::cerr << "Inherited logger used:" << std::endl;
+  QueryHandler2("query");
+  std::cerr << "New logger used:" << std::endl;
+  QueryHandler1("another query");
 }
