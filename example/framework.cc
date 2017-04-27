@@ -119,8 +119,8 @@ class MyServer : public ThirdPartyFramework::ServerInterface {
       // presumably you'll know exactly what functionality needs access to the
       // scope that is being passed along. (Again, SetOverride should really
       // only be used when ThreadCrosser::WrapCall can't be.)
-      std::cerr << "MyServer is processing query \""
-                << query << "\"" << std::endl;
+      std::cerr << "MyServer is processing query \"" << query << "\""
+                << std::endl;
       LogUsage::Query(query);
     });
     // Outside of the Call, override_point_ has no effect.

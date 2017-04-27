@@ -296,9 +296,7 @@ TEST(ThreadCrosserTest, ManualCrosserOverride) {
   const ThreadCrosser::SetOverride override_point;
 
   std::thread unwrapped_worker([&override_point] {
-    override_point.Call([] {
-      LogText::Log("logged 1");
-    });
+    override_point.Call([] { LogText::Log("logged 1"); });
   });
   unwrapped_worker.join();
 
