@@ -16,6 +16,9 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+#ifndef LOG_TEXT_H_
+#define LOG_TEXT_H_
+
 #include <list>
 #include <mutex>
 #include <string>
@@ -69,3 +72,5 @@ class LogTextMultiThread : public LogText {
 };
 
 }  // namespace capture_thread
+
+#endif  // LOG_TEXT_H_
