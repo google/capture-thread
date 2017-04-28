@@ -18,8 +18,6 @@ limitations under the License.
 
 #include "thread-crosser.h"
 
-#include <cassert>
-
 namespace capture_thread {
 
 // static
