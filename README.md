@@ -1,4 +1,4 @@
-# Capture Thread Library
+# [Capture Thread Library][google/capture-thread]
 
 Framework for loggers, tracers, and mockers in multithreaded C++ programs.
 
@@ -65,5 +65,9 @@ demonstrate a wide range of usage patterns.
 See [`CONTRIBUTING.md`](CONTRIBUTING.md) for guidelines. All contributions must
 follow the Google C++ style guide at
 https://google.github.io/styleguide/cppguide.html. **Contributions should be
-made to the [`current`](../../tree/current) branch, which will periodically be
-merged with [`master`](../../tree/master) after a more thorough review.**
+made to the [`current`][current] branch, which will periodically be merged with
+[`master`][master] after a more thorough review.**
+
+[google/capture-thread]: https://github.com/google/capture-thread
+[master]: https://github.com/google/capture-thread/tree/master
+[current]: https://github.com/google/capture-thread/tree/current
