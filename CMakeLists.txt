@@ -1,4 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
+project(capture-thread)
 
 include_directories(
   ${CMAKE_SOURCE_DIR}/include
@@ -6,113 +7,124 @@ include_directories(
 
 set(CMAKE_CXX_FLAGS "-Wall -pedantic -std=c++11 -O2 -g -pthread")
 
-add_library(
-  capture-thread
+IF(NOT USE_PREFIX)
+  SET(CMAKE_INSTALL_PREFIX "${CMAKE_SOURCE_DIR}")
+ENDIF()
+
+SET(INSTALL_INCLUDEDIR "include")
+SET(INSTALL_LIBDIR "lib")
+
+SET(INSTALL_PATH "${CMAKE_INSTALL_PREFIX}")
+SET(INCLUDE_PATH "${INSTALL_PATH}/${INSTALL_INCLUDEDIR}")
+SET(LIBRARY_PATH "${INSTALL_PATH}/${INSTALL_LIBDIR}")
+
+INCLUDE(FindThreads)
+FIND_LIBRARY(PTHREAD_LIBRARY
+  NAMES pthread
+  QUIET
+  ONLY_CMAKE_FIND_ROOT_PATH)
+IF(NOT PTHREAD_LIBRARY)
+ SET(PTHREAD_LIBRARY "")
+ENDIF()
+
+add_library(capture-thread STATIC
   src/thread-crosser.cc)
 
-add_executable(
-  async
+add_executable(async
   example/async.cc)
-target_link_libraries(
-  async
+target_link_libraries(async
   capture-thread
-  pthread)
+  ${PTHREAD_LIBRARY})
 
-add_executable(
-  framework
+add_executable(framework
   example/framework.cc)
-target_link_libraries(
-  framework
+target_link_libraries(framework
   capture-thread
-  pthread)
+  ${PTHREAD_LIBRARY})
 
-add_executable(
-  inherit
+add_executable(inherit
   example/inherit.cc)
-target_link_libraries(
-  inherit
+target_link_libraries(inherit
   capture-thread)
 
-add_executable(
-  limit
+add_executable(limit
   example/limit.cc)
 target_link_libraries(
   limit
   capture-thread)
 
-add_executable(
-  mock
+add_executable(mock
   example/mock.cc)
-target_link_libraries(
-  mock
+target_link_libraries(mock
   capture-thread)
 
-add_executable(
-  paths
+add_executable(paths
   example/paths.cc)
 target_link_libraries(
   paths
   capture-thread)
 
-add_executable(
-  simple
+add_executable(simple
   example/simple.cc)
 target_link_libraries(
   simple
   capture-thread)
 
-add_executable(
-  threaded
+add_executable(threaded
   example/threaded.cc)
 target_link_libraries(
   threaded
   capture-thread
-  pthread)
+  ${PTHREAD_LIBRARY})
 
-add_executable(
-  trace
+add_executable(trace
   example/trace.cc)
 target_link_libraries(
   trace
   capture-thread
-  pthread)
+  ${PTHREAD_LIBRARY})
 
-add_executable(
-  demo-main
+add_executable(demo-main
   demo/main.cc
   demo/logging.cc
   demo/tracing.cc
   common/callback-queue.cc)
-target_link_libraries(
-  demo-main
+target_link_libraries(demo-main
   capture-thread
-  pthread)
+  ${PTHREAD_LIBRARY})
+
+INSTALL(TARGETS
+  capture-thread
+  DESTINATION ${INSTALL_LIBDIR})
+
+INSTALL(FILES
+  include/thread-capture.h
+  include/thread-crosser.h
+  DESTINATION ${INSTALL_INCLUDEDIR})
 
 find_package(GTest)
 if(GTEST_LIBRARIES)
 
   include_directories(${GTEST_INCLUDE_DIRS})
 
-  add_executable(
-    capture-thread-test
+  add_executable(capture-thread-test
     test/test.cc
     test/log-text.cc
     test/log-values.cc
     common/callback-queue.cc)
-  target_link_libraries(
-    capture-thread-test
+  target_link_libraries(capture-thread-test
     gtest gmock gtest_main
-    capture-thread pthread)
+    capture-thread
+    ${PTHREAD_LIBRARY})
 
-  add_executable(
-    demo-test
+  add_executable(demo-test
     demo/test.cc
     demo/logging.cc
     demo/tracing.cc
     common/callback-queue.cc)
-  target_link_libraries(
-    demo-test
+  target_link_libraries(demo-test
     gtest gmock gtest_main
-    capture-thread pthread)
+    capture-thread
+    ${PTHREAD_LIBRARY})
 
 endif()
