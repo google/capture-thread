@@ -123,6 +123,16 @@ if(GTEST_LIBRARIES)
     capture-thread
     ${PTHREAD_LIBRARY})
 
+  add_executable(thread-crosser-test
+    test/thread-crosser-test.cc
+    test/log-text.cc
+    test/log-values.cc
+    common/callback-queue.cc)
+  target_link_libraries(thread-crosser-test
+    gtest gmock gtest_main
+    capture-thread
+    ${PTHREAD_LIBRARY})
+
   add_executable(demo-test
     demo/test.cc
     demo/logging.cc
