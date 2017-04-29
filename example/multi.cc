@@ -87,7 +87,7 @@ int main() {
   // The same applies to ThreadCrosser::SetOverride::Call. (See framework.cc.)
   const ThreadCrosser::SetOverride override_point;
   std::thread worker2([&override_point] {
-    override_point.Call(WorkerThread);
+    override_point.Call(&WorkerThread);
   });
   worker2.join();
 }
