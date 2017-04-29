@@ -58,6 +58,12 @@ add_executable(mock
 target_link_libraries(mock
   capture-thread)
 
+add_executable(multi
+  example/multi.cc)
+target_link_libraries(multi
+  capture-thread
+  ${PTHREAD_LIBRARY})
+
 add_executable(paths
   example/paths.cc)
 target_link_libraries(
@@ -93,6 +99,12 @@ target_link_libraries(demo-main
   capture-thread
   ${PTHREAD_LIBRARY})
 
+add_executable(readme-test
+  test/readme-test.cc)
+target_link_libraries(readme-test
+  capture-thread
+  ${PTHREAD_LIBRARY})
+
 INSTALL(TARGETS
   capture-thread
   DESTINATION ${INSTALL_LIBDIR})
@@ -107,12 +119,22 @@ if(GTEST_LIBRARIES)
 
   include_directories(${GTEST_INCLUDE_DIRS})
 
-  add_executable(capture-thread-test
-    test/test.cc
-    test/log-text.cc
-    test/log-values.cc
+  add_executable(thread-capture-test
+    test/thread-capture-test.cc
+    common/log-text.cc
+    common/log-values.cc
     common/callback-queue.cc)
-  target_link_libraries(capture-thread-test
+  target_link_libraries(thread-capture-test
+    gtest gmock gtest_main
+    capture-thread
+    ${PTHREAD_LIBRARY})
+
+  add_executable(thread-crosser-test
+    test/thread-crosser-test.cc
+    common/log-text.cc
+    common/log-values.cc
+    common/callback-queue.cc)
+  target_link_libraries(thread-crosser-test
     gtest gmock gtest_main
     capture-thread
     ${PTHREAD_LIBRARY})

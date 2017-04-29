@@ -16,58 +16,63 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
-#ifndef LOG_VALUES_H_
-#define LOG_VALUES_H_
+#ifndef LOG_TEXT_H_
+#define LOG_TEXT_H_
 
 #include <list>
 #include <mutex>
+#include <string>
 
 #include "thread-capture.h"
 #include "thread-crosser.h"
 
 namespace capture_thread {
+namespace testing {
 
-// Captures numerical log entries.
-class LogValues : public ThreadCapture<LogValues> {
+// Captures text log entries.
+class LogText : public ThreadCapture<LogText> {
  public:
-  static void Count(int count);
+  static void Log(std::string line);
 
  protected:
-  LogValues() = default;
-  virtual ~LogValues() = default;
+  LogText() = default;
+  virtual ~LogText() = default;
 
-  virtual void LogCount(int count) = 0;
+  virtual void LogLine(std::string line) = 0;
 };
 
-// Captures numerical log entries, without automatic thread crossing.
-class LogValuesSingleThread : public LogValues {
+// Captures text log entries, without automatic thread crossing.
+class LogTextSingleThread : public LogText {
  public:
-  LogValuesSingleThread() : capture_to_(this) {}
+  LogTextSingleThread() : capture_to_(this) {}
 
-  const std::list<int>& GetCounts() { return counts_; }
+  const std::list<std::string>& GetLines() { return lines_; }
 
  private:
-  void LogCount(int count) { counts_.emplace_back(count); }
+  void LogLine(std::string line) override {
+    lines_.emplace_back(std::move(line));
+  }
 
-  std::list<int> counts_;
+  std::list<std::string> lines_;
   const ScopedCapture capture_to_;
 };
 
-// Captures numerical log entries, with automatic thread crossing.
-class LogValuesMultiThread : public LogValues {
+// Captures text log entries, with automatic thread crossing.
+class LogTextMultiThread : public LogText {
  public:
-  LogValuesMultiThread() : cross_and_capture_to_(this) {}
+  LogTextMultiThread() : cross_and_capture_to_(this) {}
 
-  std::list<int> GetCounts();
+  std::list<std::string> GetLines();
 
  private:
-  void LogCount(int count);
+  void LogLine(std::string line) override;
 
   std::mutex data_lock_;
-  std::list<int> counts_;
+  std::list<std::string> lines_;
   const AutoThreadCrosser cross_and_capture_to_;
 };
 
+}  // namespace testing
 }  // namespace capture_thread
 
-#endif  // LOG_VALUES_H_
+#endif  // LOG_TEXT_H_

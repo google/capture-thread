@@ -24,7 +24,8 @@ limitations under the License.
 #include <mutex>
 #include <queue>
 
-namespace common {
+namespace capture_thread {
+namespace testing {
 
 // Queues and executes callbacks.
 class CallbackQueue {
@@ -56,6 +57,7 @@ class CallbackQueue {
   std::queue<std::function<void()>> queue_;
 };
 
-}  // namespace common
+}  // namespace testing
+}  // namespace capture_thread
 
 #endif  // CALLBACK_QUEUE_H_
