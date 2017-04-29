@@ -58,6 +58,12 @@ add_executable(mock
 target_link_libraries(mock
   capture-thread)
 
+add_executable(multi
+  example/multi.cc)
+target_link_libraries(multi
+  capture-thread
+  ${PTHREAD_LIBRARY})
+
 add_executable(paths
   example/paths.cc)
 target_link_libraries(
