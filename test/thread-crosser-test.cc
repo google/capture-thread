@@ -28,15 +28,22 @@ limitations under the License.
 #include <gtest/gtest.h>
 
 #include "thread-capture.h"
+#include "thread-crosser.h"
 
 #include "callback-queue.h"
 #include "log-text.h"
 #include "log-values.h"
 
-using common::CallbackQueue;
 using testing::ElementsAre;
 
 namespace capture_thread {
+
+using testing::CallbackQueue;
+using testing::LogText;
+using testing::LogTextMultiThread;
+using testing::LogTextSingleThread;
+using testing::LogValues;
+using testing::LogValuesMultiThread;
 
 TEST(ThreadCrosserTest, WrapCallIsFineWithoutLogger) {
   bool called = false;

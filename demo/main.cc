@@ -28,7 +28,7 @@ limitations under the License.
 #include "tracing.h"
 
 using capture_thread::ThreadCrosser;
-using common::CallbackQueue;
+using capture_thread::testing::CallbackQueue;
 using demo::CaptureLogging;
 using demo::Formatter;
 using demo::Logging;

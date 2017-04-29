@@ -33,10 +33,15 @@ limitations under the License.
 #include "log-text.h"
 #include "log-values.h"
 
-using common::CallbackQueue;
 using testing::ElementsAre;
 
 namespace capture_thread {
+
+using testing::CallbackQueue;
+using testing::LogText;
+using testing::LogTextSingleThread;
+using testing::LogValues;
+using testing::LogValuesSingleThread;
 
 TEST(ThreadCaptureTest, NoLoggerInterferenceWithDifferentTypes) {
   LogText::Log("not logged");

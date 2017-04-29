@@ -115,8 +115,8 @@ if(GTEST_LIBRARIES)
 
   add_executable(thread-capture-test
     test/thread-capture-test.cc
-    test/log-text.cc
-    test/log-values.cc
+    common/log-text.cc
+    common/log-values.cc
     common/callback-queue.cc)
   target_link_libraries(thread-capture-test
     gtest gmock gtest_main
@@ -125,8 +125,8 @@ if(GTEST_LIBRARIES)
 
   add_executable(thread-crosser-test
     test/thread-crosser-test.cc
-    test/log-text.cc
-    test/log-values.cc
+    common/log-text.cc
+    common/log-values.cc
     common/callback-queue.cc)
   target_link_libraries(thread-crosser-test
     gtest gmock gtest_main

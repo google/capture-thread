@@ -18,7 +18,8 @@ limitations under the License.
 
 #include "callback-queue.h"
 
-namespace common {
+namespace capture_thread {
+namespace testing {
 
 void CallbackQueue::Push(std::function<void()> callback) {
   std::lock_guard<std::mutex> lock(queue_lock_);
@@ -69,4 +70,5 @@ void CallbackQueue::Activate() {
   condition_.notify_all();
 }
 
-}  // namespace common
+}  // namespace testing
+}  // namespace capture_thread

@@ -16,25 +16,27 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
-#include "log-text.h"
+#include "log-values.h"
 
 namespace capture_thread {
+namespace testing {
 
 // static
-void LogText::Log(std::string line) {
+void LogValues::Count(int count) {
   if (GetCurrent()) {
-    GetCurrent()->LogLine(std::move(line));
+    GetCurrent()->LogCount(count);
   }
 }
 
-std::list<std::string> LogTextMultiThread::GetLines() {
+std::list<int> LogValuesMultiThread::GetCounts() {
   std::lock_guard<std::mutex> lock(data_lock_);
-  return lines_;
+  return counts_;
 }
 
-void LogTextMultiThread::LogLine(std::string line) {
+void LogValuesMultiThread::LogCount(int count) {
   std::lock_guard<std::mutex> lock(data_lock_);
-  lines_.emplace_back(std::move(line));
+  counts_.emplace_back(count);
 }
 
+}  // namespace testing
 }  // namespace capture_thread
