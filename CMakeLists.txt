@@ -113,12 +113,12 @@ if(GTEST_LIBRARIES)
 
   include_directories(${GTEST_INCLUDE_DIRS})
 
-  add_executable(capture-thread-test
-    test/test.cc
+  add_executable(thread-capture-test
+    test/thread-capture-test.cc
     test/log-text.cc
     test/log-values.cc
     common/callback-queue.cc)
-  target_link_libraries(capture-thread-test
+  target_link_libraries(thread-capture-test
     gtest gmock gtest_main
     capture-thread
     ${PTHREAD_LIBRARY})
