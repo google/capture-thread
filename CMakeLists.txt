@@ -99,6 +99,12 @@ target_link_libraries(demo-main
   capture-thread
   ${PTHREAD_LIBRARY})
 
+add_executable(readme-test
+  test/readme-test.cc)
+target_link_libraries(readme-test
+  capture-thread
+  ${PTHREAD_LIBRARY})
+
 INSTALL(TARGETS
   capture-thread
   DESTINATION ${INSTALL_LIBDIR})
