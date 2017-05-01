@@ -123,7 +123,13 @@ class ThreadCapture {
 
     inline Type* Previous() const { return capture_to_.Previous(); }
 
-   protected:
+   private:
+    AutoThreadCrosser(const AutoThreadCrosser&) = delete;
+    AutoThreadCrosser(AutoThreadCrosser&&) = delete;
+    AutoThreadCrosser& operator=(const AutoThreadCrosser&) = delete;
+    AutoThreadCrosser& operator=(AutoThreadCrosser&&) = delete;
+    void* operator new(std::size_t size) = delete;
+
     std::function<void()> WrapWithCrosser(
         std::function<void()> call) const final;
 
@@ -131,13 +137,6 @@ class ThreadCapture {
         std::function<void()> call) const final;
 
     inline ThreadCrosser* Parent() const final { return cross_with_.Parent(); }
-
-   private:
-    AutoThreadCrosser(const AutoThreadCrosser&) = delete;
-    AutoThreadCrosser(AutoThreadCrosser&&) = delete;
-    AutoThreadCrosser& operator=(const AutoThreadCrosser&) = delete;
-    AutoThreadCrosser& operator=(AutoThreadCrosser&&) = delete;
-    void* operator new(std::size_t size) = delete;
 
     const ScopedCrosser cross_with_;
     const ScopedCapture capture_to_;
