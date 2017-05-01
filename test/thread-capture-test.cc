@@ -29,7 +29,6 @@ limitations under the License.
 
 #include "thread-capture.h"
 
-#include "callback-queue.h"
 #include "log-text.h"
 #include "log-values.h"
 
@@ -37,7 +36,6 @@ using testing::ElementsAre;
 
 namespace capture_thread {
 
-using testing::CallbackQueue;
 using testing::LogText;
 using testing::LogTextSingleThread;
 using testing::LogValues;
