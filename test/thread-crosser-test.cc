@@ -16,12 +16,6 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
-#include <condition_variable>
-#include <functional>
-#include <list>
-#include <mutex>
-#include <queue>
-#include <string>
 #include <thread>
 
 #include <gmock/gmock.h>
