@@ -83,6 +83,13 @@ target_link_libraries(
   capture-thread
   ${PTHREAD_LIBRARY})
 
+add_executable(throttle
+  example/throttle.cc)
+target_link_libraries(
+  throttle
+  capture-thread
+  ${PTHREAD_LIBRARY})
+
 add_executable(trace
   example/trace.cc)
 target_link_libraries(
