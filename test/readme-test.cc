@@ -18,7 +18,6 @@ limitations under the License.
 
 // Code used in the quick-start in README.md. Make sure the two stay in sync!
 
-
 // STEP 1
 
 #include <iostream>
@@ -73,7 +72,6 @@ class Logger : capture_thread::ThreadCapture<Logger> {
   const AutoThreadCrosser cross_and_capture_to_;
 };
 
-
 // STEP 2
 
 // #include the header for your instrumentation class.
@@ -84,7 +82,6 @@ void MyExistingFunction() {
   // Add calls to the static API where you need access to the instrumentation.
   Logger::Log("MyExistingFunction called");
 }
-
 
 // STEP 3
 
@@ -106,7 +103,6 @@ void ParallelizeWork() {
       capture_thread::ThreadCrosser::WrapCall(&MyExistingFunction));
   worker.join();
 }
-
 
 // STEP 4
 
