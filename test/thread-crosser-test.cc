@@ -257,12 +257,12 @@ TEST(ThreadCrosserTest, ManualOverrideIndependentOfNormalScope) {
   std::thread unwrapped_worker([&override_point] {
     LogTextMultiThread text_logger2;
     LogValuesMultiThread count_logger;
-    // Global override of LogText but not LogValues.
+    // Overrides LogText but not LogValues.
     override_point.Call([] {
       LogText::Log("logged 1");
       LogValues::Count(1);
     });
-    // Local scope supercedes global override of LogText.
+    // Local scope supercedes override of LogText.
     override_point.Call(ThreadCrosser::WrapCall([] {
       LogText::Log("logged 2");
       LogValues::Count(2);
