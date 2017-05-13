@@ -48,14 +48,6 @@ std::function<void()> ThreadCrosser::WrapCallRec(std::function<void()> call,
   }
 }
 
-void ThreadCrosser::SetOverride::Call(std::function<void()> call) const {
-  call = WrapCallRec(std::move(call), current_);
-  assert(call);
-  if (call) {
-    call();
-  }
-}
-
 // static
 thread_local ThreadCrosser* ThreadCrosser::current_(nullptr);
 

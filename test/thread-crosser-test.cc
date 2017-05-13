@@ -111,7 +111,7 @@ TEST(ThreadCrosserTest, WrapCallWithNullCallbackIsNull) {
   EXPECT_FALSE(ThreadCrosser::WrapCall(nullptr));
 }
 
-TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
+TEST(ThreadCrosserTest, WrapFunctionTypeCheckConstValueReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<const int(Type, Type&)> function(
   [](Type left, Type& right) {
@@ -122,6 +122,22 @@ TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
   Type left(new int(1)), right(new int(2));
   EXPECT_EQ(wrapped(std::move(left), right), 3);
   EXPECT_FALSE(left);
+  EXPECT_EQ(*right, 1);
+}
+
+TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
+  using Type = std::unique_ptr<int>;
+  const std::function<Type(Type, Type&)> function(
+  [](Type left, Type& right) -> Type {
+    *right = *left;
+    return left;
+  });
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
+  Type left(new int(1)), right(new int(2));
+  int* left_ptr = left.get();
+  Type result = wrapped(std::move(left), right);
+  EXPECT_FALSE(left);
+  EXPECT_EQ(result.get(), left_ptr);
   EXPECT_EQ(*right, 1);
 }
 
@@ -323,43 +339,6 @@ TEST(ThreadCrosserTest, ReverseOrderOfLoggersOnStack) {
   EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1", "logged 1"));
   EXPECT_THAT(logger2.GetLines(), ElementsAre("logged 2", "logged 2"));
   EXPECT_THAT(logger3.GetLines(), ElementsAre());
-}
-
-TEST(ThreadCrosserTest, ManualCrosserOverride) {
-  LogTextMultiThread logger;
-  const ThreadCrosser::SetOverride override_point;
-
-  std::thread unwrapped_worker([&override_point] {
-    override_point.Call([] { LogText::Log("logged 1"); });
-  });
-  unwrapped_worker.join();
-
-  EXPECT_THAT(logger.GetLines(), ElementsAre("logged 1"));
-}
-
-TEST(ThreadCrosserTest, ManualOverrideIndependentOfNormalScope) {
-  LogTextMultiThread text_logger1;
-  const ThreadCrosser::SetOverride override_point;
-
-  std::thread unwrapped_worker([&override_point] {
-    LogTextMultiThread text_logger2;
-    LogValuesMultiThread count_logger;
-    // Overrides LogText but not LogValues.
-    override_point.Call([] {
-      LogText::Log("logged 1");
-      LogValues::Count(1);
-    });
-    // Local scope supercedes override of LogText.
-    override_point.Call(ThreadCrosser::WrapCall([] {
-      LogText::Log("logged 2");
-      LogValues::Count(2);
-    }));
-    EXPECT_THAT(text_logger2.GetLines(), ElementsAre("logged 2"));
-    EXPECT_THAT(count_logger.GetCounts(), ElementsAre(1, 2));
-  });
-  unwrapped_worker.join();
-
-  EXPECT_THAT(text_logger1.GetLines(), ElementsAre("logged 1"));
 }
 
 }  // namespace capture_thread

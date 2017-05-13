@@ -42,29 +42,6 @@ class ThreadCrosser {
   static std::function<Return(Args...)> WrapFunction(
       std::function<Return(Args...)> function);
 
-  // Sets an override point for the current scope. Use this in cases where
-  // WrapCall isn't practical, e.g., if you're using a framework that manages
-  // it's own threads and has a restrictive API. Create a stack-allocated
-  // instance in the main thread, then use Call in the worker thread to wrap and
-  // call a function that should use the scope set at the override point.
-  class SetOverride {
-   public:
-    inline SetOverride() : current_(GetCurrent()) {}
-
-    // Wraps the call with the current override, then calls it.
-    void Call(std::function<void()> call) const;
-
-   private:
-    SetOverride(const SetOverride&) = delete;
-    SetOverride(SetOverride&&) = delete;
-    SetOverride& operator=(const SetOverride&) = delete;
-    SetOverride& operator=(SetOverride&&) = delete;
-    void* operator new(std::size_t size) = delete;
-
-    friend class UseOverride;
-    ThreadCrosser* const current_;
-  };
-
  private:
   ThreadCrosser(const ThreadCrosser&) = delete;
   ThreadCrosser(ThreadCrosser&&) = delete;
