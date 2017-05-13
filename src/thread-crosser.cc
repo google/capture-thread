@@ -28,21 +28,21 @@ std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call) {
 }
 
 // static
-std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call,
-                                              const ThreadCrosser* current) {
+std::function<void()> ThreadCrosser::WrapEntireScope(
+    std::function<void()> call, const ThreadCrosser* current) {
   if (call && current) {
-    return current->WrapWithCrosser(WrapCallRec(std::move(call), current));
+    return current->WrapWithCrosser(WrapContextRec(std::move(call), current));
   } else {
     return call;
   }
 }
 
 // static
-std::function<void()> ThreadCrosser::WrapCallRec(std::function<void()> call,
-                                                 const ThreadCrosser* current) {
+std::function<void()> ThreadCrosser::WrapContextRec(
+    std::function<void()> call, const ThreadCrosser* current) {
   if (current) {
-    return WrapCallRec(current->WrapWithContext(std::move(call)),
-                       current->Parent());
+    return WrapContextRec(current->WrapWithContext(std::move(call)),
+                          current->Parent());
   } else {
     return call;
   }
