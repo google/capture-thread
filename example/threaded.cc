@@ -27,6 +27,7 @@ limitations under the License.
 #include <thread>
 
 #include "thread-capture.h"
+#include "thread-crosser.h"
 
 using capture_thread::ThreadCapture;
 using capture_thread::ThreadCrosser;

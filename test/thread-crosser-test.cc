@@ -157,7 +157,7 @@ TEST(ThreadCrosserTest, WrapFunctionNotLazyWithValueReturn) {
     return 1;
   });
   LogTextMultiThread logger1;
-  const auto wrapped = ThreadCrosser::WrapFunction(function);;
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
   LogTextMultiThread logger2;
   EXPECT_EQ(wrapped(), 1);
   EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1"));
@@ -171,7 +171,7 @@ TEST(ThreadCrosserTest, WrapFunctionNotLazyWithReferenceReturn) {
     return value;
   });
   LogTextMultiThread logger1;
-  const auto wrapped = ThreadCrosser::WrapFunction(function);;
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
   LogTextMultiThread logger2;
   EXPECT_EQ(&wrapped(), &value);
   EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1"));
@@ -183,7 +183,7 @@ TEST(ThreadCrosserTest, WrapFunctionNotLazyWithVoidReturn) {
     LogText::Log("logged 1");
   });
   LogTextMultiThread logger1;
-  const auto wrapped = ThreadCrosser::WrapFunction(function);;
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
   LogTextMultiThread logger2;
   wrapped();
   EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1"));
