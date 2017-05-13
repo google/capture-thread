@@ -111,6 +111,15 @@ TEST(ThreadCrosserTest, WrapCallWithNullCallbackIsNull) {
   EXPECT_FALSE(ThreadCrosser::WrapCall(nullptr));
 }
 
+TEST(ThreadCrosserTest, WrapFunctionIsFineWithoutLogger) {
+  bool called = false;
+  ThreadCrosser::WrapFunction(std::function<void()>([&called] {
+    called = true;
+    LogText::Log("not logged");
+  }))();
+  EXPECT_TRUE(called);
+}
+
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckConstValueReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<const int(Type, Type&)> function(

@@ -198,8 +198,8 @@ class ThreadCrosser {
 template <class Return, class... Args>
 std::function<Return(Args...)> ThreadCrosser::WrapFunction(
     std::function<Return(Args...)> function) {
-  if (function) {
-    const auto current = GetCurrent();
+  const auto current = GetCurrent();
+  if (function && current) {
     return [current, function](Args... args) -> Return {
       return AutoCall<Return, Args...>::Execute(
           current, std::move(function), AutoMove<Args>::Pass(args)...);
