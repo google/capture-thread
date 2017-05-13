@@ -36,12 +36,6 @@ target_link_libraries(async
   capture-thread
   ${PTHREAD_LIBRARY})
 
-add_executable(framework
-  example/framework.cc)
-target_link_libraries(framework
-  capture-thread
-  ${PTHREAD_LIBRARY})
-
 add_executable(inherit
   example/inherit.cc)
 target_link_libraries(inherit
@@ -69,6 +63,12 @@ add_executable(paths
 target_link_libraries(
   paths
   capture-thread)
+
+add_executable(predicate
+  example/predicate.cc)
+target_link_libraries(predicate
+  capture-thread
+  ${PTHREAD_LIBRARY})
 
 add_executable(simple
   example/simple.cc)

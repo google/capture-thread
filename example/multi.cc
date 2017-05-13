@@ -84,10 +84,4 @@ int main() {
   // ThreadCapture type will be used! (See threaded.cc.)
   std::thread worker1(ThreadCrosser::WrapCall(&WorkerThread));
   worker1.join();
-
-  // The same applies to ThreadCrosser::SetOverride::Call. (See framework.cc.)
-  const ThreadCrosser::SetOverride override_point;
-  std::thread worker2(
-      [&override_point] { override_point.Call(&WorkerThread); });
-  worker2.join();
 }
