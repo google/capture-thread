@@ -16,6 +16,7 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
+#include <memory>
 #include <thread>
 
 #include <gmock/gmock.h>
@@ -108,6 +109,92 @@ TEST(ThreadCrosserTest, WrapCallWithNullCallbackIsNull) {
   EXPECT_FALSE(ThreadCrosser::WrapCall(nullptr));
   LogTextMultiThread logger;
   EXPECT_FALSE(ThreadCrosser::WrapCall(nullptr));
+}
+
+TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
+  using Type = std::unique_ptr<int>;
+  const std::function<const int(Type, Type&)> function(
+  [](Type left, Type& right) {
+    *right = *left;
+    return 3;
+  });
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
+  Type left(new int(1)), right(new int(2));
+  EXPECT_EQ(wrapped(std::move(left), right), 3);
+  EXPECT_FALSE(left);
+  EXPECT_EQ(*right, 1);
+}
+
+TEST(ThreadCrosserTest, WrapFunctionTypeCheckReferenceReturn) {
+  using Type = std::unique_ptr<int>;
+  const std::function<Type&(Type, Type&)> function(
+  [](Type left, Type& right) -> Type& {
+    *right = *left;
+    return right;
+  });
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
+  Type left(new int(1)), right(new int(2));
+  EXPECT_EQ(&wrapped(std::move(left), right), &right);
+  EXPECT_FALSE(left);
+  EXPECT_EQ(*right, 1);
+}
+
+TEST(ThreadCrosserTest, WrapFunctionTypeCheckVoidReturn) {
+  using Type = std::unique_ptr<int>;
+  const std::function<void(Type, Type&)> function([](Type left, Type& right) {
+    *right = *left;
+  });
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
+  Type left(new int(1)), right(new int(2));
+  wrapped(std::move(left), right);
+  EXPECT_FALSE(left);
+  EXPECT_EQ(*right, 1);
+}
+
+TEST(ThreadCrosserTest, WrapFunctionNotLazyWithValueReturn) {
+  const std::function<int()> function([]() -> int {
+    LogText::Log("logged 1");
+    return 1;
+  });
+  LogTextMultiThread logger1;
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
+  LogTextMultiThread logger2;
+  EXPECT_EQ(wrapped(), 1);
+  EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1"));
+  EXPECT_THAT(logger2.GetLines(), ElementsAre());
+}
+
+TEST(ThreadCrosserTest, WrapFunctionNotLazyWithReferenceReturn) {
+  int value = 0;
+  const std::function<int&()> function([&value]() -> int& {
+    LogText::Log("logged 1");
+    return value;
+  });
+  LogTextMultiThread logger1;
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
+  LogTextMultiThread logger2;
+  EXPECT_EQ(&wrapped(), &value);
+  EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1"));
+  EXPECT_THAT(logger2.GetLines(), ElementsAre());
+}
+
+TEST(ThreadCrosserTest, WrapFunctionNotLazyWithVoidReturn) {
+  const std::function<void()> function([]() {
+    LogText::Log("logged 1");
+  });
+  LogTextMultiThread logger1;
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
+  LogTextMultiThread logger2;
+  wrapped();
+  EXPECT_THAT(logger1.GetLines(), ElementsAre("logged 1"));
+  EXPECT_THAT(logger2.GetLines(), ElementsAre());
+}
+
+TEST(ThreadCrosserTest, WrapFunctionWithNullCallbackIsNull) {
+  std::function<int(int)> callback(nullptr);
+  EXPECT_FALSE(ThreadCrosser::WrapFunction(callback));
+  LogTextMultiThread logger;
+  EXPECT_FALSE(ThreadCrosser::WrapFunction(callback));
 }
 
 TEST(ThreadCrosserTest, SingleThreadCrossing) {

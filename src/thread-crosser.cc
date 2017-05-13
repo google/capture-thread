@@ -24,7 +24,12 @@ namespace capture_thread {
 
 // static
 std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call) {
-  const auto current = GetCurrent();
+  return WrapFunction(call);
+}
+
+// static
+std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call,
+                                              const ThreadCrosser* current) {
   if (call && current) {
     return current->WrapWithCrosser(WrapCallRec(std::move(call), current));
   } else {
