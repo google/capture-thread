@@ -20,6 +20,7 @@ limitations under the License.
 #define THREAD_CROSSER_H_
 
 #include <functional>
+#include <cassert>
 
 namespace capture_thread {
 
@@ -30,10 +31,15 @@ namespace capture_thread {
 // without losing functionality.
 class ThreadCrosser {
  public:
-  // NOTE: The return of WrapCall (and its copies) must never outlive the scope
-  // that WrapCall was called in, even if the functions are passed to other
-  // threads. This is because WrapCall captures elements of the stack.
+  // Wraps a simple callback with the current scope. The return must *never*
+  // outlive the scope that it was created in.
   static std::function<void()> WrapCall(std::function<void()> call);
+
+  // Wraps a general function with the current scope. The return must *never*
+  // outlive the scope that it was created in.
+  template <class Return, class... Args>
+  static std::function<Return(Args...)> WrapFunction(
+      std::function<Return(Args...)> function);
 
   // Sets an override point for the current scope. Use this in cases where
   // WrapCall isn't practical, e.g., if you're using a framework that manages
@@ -120,6 +126,65 @@ class ThreadCrosser {
     ThreadCrosser* const current_;
   };
 
+  template <class Type>
+  struct AutoMove {
+    static Type&& Pass(Type& value) { return std::move(value); }
+  };
+
+  template <class Type>
+  struct AutoMove<Type&> {
+    static Type& Pass(Type& value) { return value; }
+  };
+
+  template <class Type>
+  struct AutoMove<Type*> {
+    static Type* Pass(Type* value) { return value; }
+  };
+
+  template <class Return, class... Args>
+  struct AutoCall {
+    static Return Execute(ThreadCrosser* current,
+                          const std::function<Return(Args...)>& function,
+                          Args... args) {
+      assert(function);
+      Return value = Return();
+      ThreadCrosser::WrapCall([&value, &function, &args...] {
+        value = function(AutoMove<Args>::Pass(args)...);
+      }, current)();
+      return value;
+    }
+  };
+
+  template <class Return, class... Args>
+  struct AutoCall<Return&, Args...> {
+    static Return& Execute(ThreadCrosser* current,
+                           const std::function<Return&(Args...)>& function,
+                           Args... args) {
+      assert(function);
+      Return* value(nullptr);
+      ThreadCrosser::WrapCall([&value, &function, &args...] {
+        value = &function(AutoMove<Args>::Pass(args)...);
+      }, current)();
+      assert(value);
+      return *value;
+    }
+  };
+
+  template <class... Args>
+  struct AutoCall<void, Args...> {
+    static void Execute(ThreadCrosser* current,
+                        const std::function<void(Args...)>& function,
+                        Args... args) {
+      assert(function);
+      ThreadCrosser::WrapCall([&function, &args...] {
+        function(AutoMove<Args>::Pass(args)...);
+      }, current)();
+    }
+  };
+
+  static std::function<void()> WrapCall(std::function<void()> call,
+                                        const ThreadCrosser* current);
+
   static std::function<void()> WrapCallRec(std::function<void()> call,
                                            const ThreadCrosser* current);
 
@@ -131,6 +196,20 @@ class ThreadCrosser {
   template <class Type>
   friend class ThreadCapture;
 };
+
+template <class Return, class... Args>
+std::function<Return(Args...)> ThreadCrosser::WrapFunction(
+    std::function<Return(Args...)> function) {
+  if (function) {
+    const auto current = GetCurrent();
+    return [current, function](Args... args) -> Return {
+      return AutoCall<Return, Args...>::Execute(
+          current, std::move(function), AutoMove<Args>::Pass(args)...);
+    };
+  } else {
+    return function;
+  }
+}
 
 }  // namespace capture_thread
 
