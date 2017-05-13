@@ -111,7 +111,7 @@ TEST(ThreadCrosserTest, WrapCallWithNullCallbackIsNull) {
   EXPECT_FALSE(ThreadCrosser::WrapCall(nullptr));
 }
 
-TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
+TEST(ThreadCrosserTest, WrapFunctionTypeCheckConstValueReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<const int(Type, Type&)> function(
   [](Type left, Type& right) {
@@ -122,6 +122,22 @@ TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
   Type left(new int(1)), right(new int(2));
   EXPECT_EQ(wrapped(std::move(left), right), 3);
   EXPECT_FALSE(left);
+  EXPECT_EQ(*right, 1);
+}
+
+TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
+  using Type = std::unique_ptr<int>;
+  const std::function<Type(Type, Type&)> function(
+  [](Type left, Type& right) -> Type {
+    *right = *left;
+    return left;
+  });
+  const auto wrapped = ThreadCrosser::WrapFunction(function);
+  Type left(new int(1)), right(new int(2));
+  int* left_ptr = left.get();
+  Type result = wrapped(std::move(left), right);
+  EXPECT_FALSE(left);
+  EXPECT_EQ(result.get(), left_ptr);
   EXPECT_EQ(*right, 1);
 }
 
