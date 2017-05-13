@@ -113,7 +113,8 @@ TEST(ThreadCrosserTest, WrapCallWithNullCallbackIsNull) {
 
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
   using Type = std::unique_ptr<int>;
-  const std::function<int(Type, Type&)> function([](Type left, Type& right) {
+  const std::function<const int(Type, Type&)> function(
+  [](Type left, Type& right) {
     *right = *left;
     return 3;
   });

@@ -20,6 +20,7 @@ limitations under the License.
 #define THREAD_CROSSER_H_
 
 #include <functional>
+#include <type_traits>
 #include <cassert>
 
 namespace capture_thread {
@@ -147,7 +148,7 @@ class ThreadCrosser {
                           const std::function<Return(Args...)>& function,
                           Args... args) {
       assert(function);
-      Return value = Return();
+      typename std::remove_cv<Return>::type value = Return();
       ThreadCrosser::WrapCall([&value, &function, &args...] {
         value = function(AutoMove<Args>::Pass(args)...);
       }, current)();
