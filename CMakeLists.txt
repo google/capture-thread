@@ -64,12 +64,6 @@ target_link_libraries(
   paths
   capture-thread)
 
-add_executable(predicate
-  example/predicate.cc)
-target_link_libraries(predicate
-  capture-thread
-  ${PTHREAD_LIBRARY})
-
 add_executable(simple
   example/simple.cc)
 target_link_libraries(
