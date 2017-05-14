@@ -25,14 +25,13 @@ namespace capture_thread {
 // static
 void ThreadCrosser::CallInFullContext(const std::function<void()>& call,
                                       const ThreadCrosser* current) {
-  assert(call);
-  if (!call) {
-    return;
-  }
   if (current) {
-    current->CallInReverse(call, { current, nullptr });
+    current->FindTopAndCall(call, { current, nullptr });
   } else {
-    call();
+    assert(call);
+    if (call) {
+      call();
+    }
   }
 }
 
