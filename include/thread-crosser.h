@@ -67,17 +67,14 @@ class ThreadCrosser {
 
   // Traverses to the top of the ThreadCrosser stack to recursively rebuild the
   // stack of ThreadCapture, then calls the callback.
-  virtual void CallInReverse(const std::function<void()>& call,
-                             const ReverseScope& reverse_scope) const = 0;
+  virtual void FindTopAndCall(const std::function<void()>& call,
+                              const ReverseScope& reverse_scope) const = 0;
 
   // Instantiates the ThreadCapture context associated with this ThreadCrosser,
   // then recursively calls the next ThreadCrosser.
-  virtual void CallWithContext(const std::function<void()>& call,
-                               const ReverseScope& reverse_scope) const = 0;
-
-  // Instantiates the current ThreadCrosser in the currents scope to make it
-  // available in the calling thread, then calls the callback.
-  virtual void CallWithCrosser(const std::function<void()>& call) const = 0;
+  virtual void ReconstructContextAndCall(
+     const std::function<void()>& call,
+     const ReverseScope& reverse_scope) const = 0;
 
   class ScopedCrosser;
 

@@ -132,13 +132,12 @@ class ThreadCapture {
     AutoThreadCrosser& operator=(AutoThreadCrosser&&) = delete;
     void* operator new(std::size_t size) = delete;
 
-    void CallInReverse(const std::function<void()>& call,
-                       const ReverseScope& reverse_scope) const final;
+    void FindTopAndCall(const std::function<void()>& call,
+                        const ReverseScope& reverse_scope) const final;
 
-    void CallWithContext(const std::function<void()>& call,
-                         const ReverseScope& reverse_scope) const final;
-
-    void CallWithCrosser(const std::function<void()>& call) const final;
+    void ReconstructContextAndCall(
+        const std::function<void()>& call,
+        const ReverseScope& reverse_scope) const final;
 
     const ScopedCrosser cross_with_;
     const ScopedCapture capture_to_;
@@ -160,43 +159,40 @@ template <class Type>
 thread_local Type* ThreadCapture<Type>::current_(nullptr);
 
 template <class Type>
-void ThreadCapture<Type>::AutoThreadCrosser::CallInReverse(
+void ThreadCapture<Type>::AutoThreadCrosser::FindTopAndCall(
     const std::function<void()>& call,
     const ReverseScope& reverse_scope) const {
   if (cross_with_.Parent()) {
-    cross_with_.Parent()->CallInReverse(
+    cross_with_.Parent()->FindTopAndCall(
         call, { cross_with_.Parent(), &reverse_scope });
   } else {
-    CallWithContext(call, reverse_scope);
+    ReconstructContextAndCall(call, reverse_scope);
   }
 }
 
 template <class Type>
-void ThreadCapture<Type>::AutoThreadCrosser::CallWithContext(
+void ThreadCapture<Type>::AutoThreadCrosser::ReconstructContextAndCall(
     const std::function<void()>& call,
     const ReverseScope& reverse_scope) const {
+  // Makes the ThreadCapture available in this scope so that it overrides the
+  // default behavior of instrumentation calls made in call.
   const CrossThreads capture(capture_to_);
   if (reverse_scope.previous) {
-    assert(reverse_scope.previous->current);
-    if (!reverse_scope.previous->current) {
-      return;
+    const auto current = reverse_scope.previous->current;
+    assert(current);
+    if (current) {
+      reverse_scope.previous->current->ReconstructContextAndCall(
+          call, *reverse_scope.previous);
     }
-    reverse_scope.previous->current->CallWithContext(call,
-                                                     *reverse_scope.previous);
   } else {
-    CallWithCrosser(call);
+    // Makes the ThreadCrosser available in this scope so that call itself can
+    // cross threads again.
+    const DelegateCrosser crosser(cross_with_);
+    assert(call);
+    if (call) {
+      call();
+    }
   }
-}
-
-template <class Type>
-void ThreadCapture<Type>::AutoThreadCrosser::CallWithCrosser(
-    const std::function<void()>& call) const {
-  assert(call);
-  if (!call) {
-    return;
-  }
-  const DelegateCrosser crosser(cross_with_);
-  call();
 }
 
 }  // namespace capture_thread
