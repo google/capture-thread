@@ -34,7 +34,9 @@ class ThreadCrosser {
  public:
   // Wraps a simple callback with the current scope. The return must *never*
   // outlive the scope that it was created in.
-  static std::function<void()> WrapCall(std::function<void()> call);
+  static inline std::function<void()> WrapCall(std::function<void()> call) {
+    return WrapFunction(std::move(call));
+  }
 
   // Wraps a general function with the current scope. The return must *never*
   // outlive the scope that it was created in.
@@ -60,22 +62,22 @@ class ThreadCrosser {
 
   // Performs the function call in the full ThreadCapture context above this
   // ThreadCrosser.
-  static void CallInFullContext(std::function<void()> call,
+  static void CallInFullContext(const std::function<void()>& call,
                                 const ThreadCrosser* current);
 
   // Traverses to the top of the ThreadCrosser stack to recursively rebuild the
   // stack of ThreadCapture, then calls the callback.
-  virtual void CallInReverse(std::function<void()> call,
+  virtual void CallInReverse(const std::function<void()>& call,
                              const ReverseScope& reverse_scope) const = 0;
 
   // Instantiates the ThreadCapture context associated with this ThreadCrosser,
   // then recursively calls the next ThreadCrosser.
-  virtual void CallWithContext(std::function<void()> call,
+  virtual void CallWithContext(const std::function<void()>& call,
                                const ReverseScope& reverse_scope) const = 0;
 
   // Instantiates the current ThreadCrosser in the currents scope to make it
   // available in the calling thread, then calls the callback.
-  virtual void CallWithCrosser(std::function<void()> call) const = 0;
+  virtual void CallWithCrosser(const std::function<void()>& call) const = 0;
 
   class ScopedCrosser;
 
@@ -208,7 +210,7 @@ std::function<Return(Args...)> ThreadCrosser::WrapFunction(
   if (function && current) {
     return [current, function](Args... args) -> Return {
       return AutoCall<Return, Args...>::Execute(
-          current, std::move(function), AutoMove<Args>::Pass(args)...);
+          current, function, AutoMove<Args>::Pass(args)...);
     };
   } else {
     return function;
