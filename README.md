@@ -6,36 +6,111 @@ Framework for loggers, tracers, and mockers in multithreaded C++ programs.
 
 ## Motivation
 
-This library solves the following problem: *Information needs to be passed
-between different levels of implementation, but that information isn't an
-integral part of the system's design.*
+When developing C++ projects, [instrumentation][instrumentation] is frequently
+used to collect information from the system, inject information into the system,
+or both. The role of this information within the system rarely lines up with the
+actual structure of the project.
 
 For example:
 
-1.  Loggers that collect information about the inner workings of the system,
-    e.g., performance and call information.
-2.  Tracers that provide the inner workings of the system with context regarding
-    the execution path taken to get to a certain call.
-3.  Mockers that need to replace a real object with a mock object without being
-    able to do so via dependency injection.
+-   *Loggers* will collect information in a wide range of contexts within the
+    code, and thus the logic connecting the log points to the logger will not
+    match the structure of the project.
 
-Instrumenting C++ code can be difficult and ugly, and once finished it can also
-cause the original code to be difficult to maintain:
+-   *Tracers* make available information that describes how call execution
+    arrived at a certain point. In some cases this information can be passed
+    along with the data being processed, but in most cases this is obtrusive and
+    does not scale well.
 
--   Explicitly passing objects down from the top causes code to become
-    unmaintainable.
--   Using global data can cause serious complications in multithreaded
-    environments when you only want to log, trace, or mock a certain call and
-    not others.
--   Using a unique identifier to look up shared data in a global hash table
-    requires both creating an identifier and passing it around.
+-   *Mockers* replace default idioms (e.g., opening files) with alternate
+    behavior for the purposes of testing. These actions generally occur deep
+    within the code, and could not otherwise we swapped out for testing without
+    leaking those details in the API.
 
-This library circumvents these problems by tracking information per thread, with
-the possibility of conditionally sharing information between threads.
+This library is designed to handle all of these situations with minimal
+intrusion into your project, and without leaking details in your API.
 
-**Most importantly, this is a framework for your loggers, tracers, and mockers,
-and not for your entire project. This means that by design it's non-intrusive,
-and doesn't require you to modify the design of your project.**
+## Summary
+
+The **Capture Thread Library** is designed around the concept of
+thread-locality, which allows the sharing of static variables *only within the
+current thread*. Canonical static variables, on the other hand, are problematic
+due to ownership and thread-safety issues.
+
+This library establishes the following idiom *(using logging as an example)*:
+
+1.  The instrumentation is 100% passive unless it is explicitly enabled.
+    *(Logging points in the code that by default just print to `std::cerr`.)*
+
+2.  Instrumentation is enabled in the current thread by *instantiating* an
+    implementation, and only remains enabled until that instance goes out of
+    scope. *(Instantiate a log-capture instance of the logger instrumentation in
+    a function that processes an incoming query, so that the query response can
+    contain the logged messages.)*
+
+3.  While enabled, the instrumentation transparently alters the behavior of
+    logic deep within the code that would otherwise use default behavior.
+    *(The log-capture instance redirects log messages to a `std::list` while the
+    instance is in scope.)*
+
+4.  Instrumentation can be shared across threads in *explicitly-specified*
+    points in the code, based entirely on how you compartmentalize your logic.
+    *(You split processing of a single query among multiple threads, and you
+    want the instrumentation to capture all log messages that occur for that
+    query.)*
+
+## Key Design Points
+
+The **Capture Thread Library** has several design points that make it efficient
+and reliable:
+
+-   All data structures are immutable and contain no dynamic allocation.
+-   All library logic is thread-safe without threads blocking each other.
+-   The enabling and disabling of instrumentation is strictly scope-driven,
+    making it impossible to have bad pointers when used correctly.
+-   The work required to share instrumentation between threads *does not* depend
+    on the number of types of instrumentation used. (For example, sharing a
+    logger and a tracer is the same amount of work as just sharing a logger.)
+-   Instrumentation classes derived (by you) from this library *cannot* be
+    moved, copied, or dynamically allocated, ensuring that scoping rules are
+    strictly enforced.
+-   The library is designed so that instrumentation data structures and calls do
+    not need to be visible in your project's API headers, making them low-risk
+    to add, modify, or remove.
+-   All of the library code is thoroughly unit-tested.
+
+## Caveats
+
+In some cases, it might not be appropriate (or possible) to use the **Capture
+Thread Library**:
+
+-   To keep your design comprehensible, you *should not* use this library as a
+    means of passing "normal" data (e.g., input to be processed) between parts
+    of your project. While this library is safe in such situations, this would
+    likely lead to difficult-to-follow code, and perhaps baffling latent bugs.
+
+-   At the moment, this library does not handle the sharing of instrumentation
+    between threads if you are unable to pass a `std::function` from one thread
+    to another. For example, you might use a framework that creates its own
+    threads that are not visible to your project. (A work-around will probably
+    be added to this library in the future, however.)
+
+-   Since this library is scope-driven, you *cannot* share instrumentation
+    outside of the scope it was created in. For example:
+
+    ```c++
+    void f() { MyLogger capture_messages; }
+    void g() { MyLogger::Log("g was called"); }
+
+    int main() {
+      f();
+      g();
+    }
+    ```
+
+    In this example, the instrumentation is created in `f`, but goes out of
+    scope before `g` is called. In this case, `g` just uses the default behavior
+    for `MyLogger::Log`.
 
 ## Quick Start
 
@@ -54,7 +129,7 @@ already functional, and is just lacking instrumentation.
 Complexity estimates below are estimates of how much additional work will be
 necessary as your project grows.
 
-### Step 1: Instrumentation Class [*O(1)*]
+### Step 1: Instrumentation Class [`O(1)`]
 
 The instrumentation class(es) will generally be written once and then left
 alone. They might also be general enough for use in multiple projects.
@@ -113,7 +188,7 @@ class Logger : capture_thread::ThreadCapture<Logger> {
 };
 ```
 
-### Step 2: Instrument the Code [*O(n)*]
+### Step 2: Instrument the Code [`O(n)`]
 
 Instrumenting the code with your new instrumentation class will generally
 consist of one-line additions throughout the code. There will often be a large
@@ -130,7 +205,7 @@ void MyExistingFunction() {
 }
 ```
 
-### Step 3: Cross Threads [*O(log n)*]
+### Step 3: Cross Threads [`O(log n)`]
 
 Crossing threads is necessary when the process you are tracking splits work
 among multiple threads. The complexity here depends on both what you consider a
@@ -157,10 +232,10 @@ void ParallelizeWork() {
 }
 ```
 
-### Step 4: Enable Instrumentation [*O(1)*]
+### Step 4: Enable Instrumentation [`O(1)`]
 
 Your instrumentation must have default behavior that makes sense when the
-instrumentation isn't enabled. Instrumentation can only be enabled by
+instrumentation is not enabled. Instrumentation can only be enabled by
 instantiating the implementation, and will only be available until that instance
 goes out of scope. There should be *very few* instantiation points (i.e.,
 usually just one per instrumentation type) in your code.
@@ -205,3 +280,4 @@ made to the [`current`][current] branch, which will periodically be merged with
 [google/capture-thread]: https://github.com/google/capture-thread
 [master]: https://github.com/google/capture-thread/tree/master
 [current]: https://github.com/google/capture-thread/tree/current
+[instrumentation]: https://en.wikipedia.org/wiki/Instrumentation_(computer_programming)
