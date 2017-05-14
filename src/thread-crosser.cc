@@ -16,8 +16,6 @@ limitations under the License.
 
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
-#include <cassert>
-
 #include "thread-crosser.h"
 
 namespace capture_thread {
