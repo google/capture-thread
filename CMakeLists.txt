@@ -70,6 +70,12 @@ target_link_libraries(
   simple
   capture-thread)
 
+add_executable(speed
+  example/speed.cc)
+target_link_libraries(
+  speed
+  capture-thread)
+
 add_executable(threaded
   example/threaded.cc)
 target_link_libraries(

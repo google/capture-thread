@@ -21,6 +21,7 @@ limitations under the License.
 
 #include <functional>
 #include <type_traits>
+
 #include <cassert>
 
 namespace capture_thread {
@@ -33,7 +34,9 @@ class ThreadCrosser {
  public:
   // Wraps a simple callback with the current scope. The return must *never*
   // outlive the scope that it was created in.
-  static std::function<void()> WrapCall(std::function<void()> call);
+  static inline std::function<void()> WrapCall(std::function<void()> call) {
+    return WrapFunction(std::move(call));
+  }
 
   // Wraps a general function with the current scope. The return must *never*
   // outlive the scope that it was created in.
@@ -51,16 +54,30 @@ class ThreadCrosser {
   ThreadCrosser() = default;
   virtual ~ThreadCrosser() = default;
 
-  // Allows nested thread-crossing (i.e., crossing threads again within a
-  // thread) to work properly.
-  virtual std::function<void()> WrapWithCrosser(
-      std::function<void()> call) const = 0;
+  // Keeps track of a reverse call stack when wrapping a callback.
+  struct ReverseScope {
+    const ThreadCrosser* const current;
+    const ReverseScope* const previous;
+  };
 
-  // Captures a specific ThreadCapture instance and binds it to the function.
-  virtual std::function<void()> WrapWithContext(
-      std::function<void()> call) const = 0;
+  // Performs the function call in the full ThreadCapture context above this
+  // ThreadCrosser.
+  static void CallInFullContext(const std::function<void()>& call,
+                                const ThreadCrosser* current);
 
-  virtual ThreadCrosser* Parent() const = 0;
+  // Traverses to the top of the ThreadCrosser stack to recursively rebuild the
+  // stack of ThreadCapture, then calls the callback.
+  virtual void CallInReverse(const std::function<void()>& call,
+                             const ReverseScope& reverse_scope) const = 0;
+
+  // Instantiates the ThreadCapture context associated with this ThreadCrosser,
+  // then recursively calls the next ThreadCrosser.
+  virtual void CallWithContext(const std::function<void()>& call,
+                               const ReverseScope& reverse_scope) const = 0;
+
+  // Instantiates the current ThreadCrosser in the currents scope to make it
+  // available in the calling thread, then calls the callback.
+  virtual void CallWithCrosser(const std::function<void()>& call) const = 0;
 
   class ScopedCrosser;
 
@@ -141,9 +158,9 @@ class ThreadCrosser {
                           Args... args) {
       assert(function);
       typename std::remove_cv<Return>::type value = Return();
-      ThreadCrosser::WrapEntireScope([&value, &function, &args...] {
+      CallInFullContext([&value, &function, &args...] {
         value = function(AutoMove<Args>::Pass(args)...);
-      }, current)();
+      }, current);
       return value;
     }
   };
@@ -156,9 +173,9 @@ class ThreadCrosser {
                            Args... args) {
       assert(function);
       Return* value(nullptr);
-      ThreadCrosser::WrapEntireScope([&value, &function, &args...] {
+      CallInFullContext([&value, &function, &args...] {
         value = &function(AutoMove<Args>::Pass(args)...);
-      }, current)();
+      }, current);
       assert(value);
       return *value;
     }
@@ -171,20 +188,11 @@ class ThreadCrosser {
                         const std::function<void(Args...)>& function,
                         Args... args) {
       assert(function);
-      ThreadCrosser::WrapEntireScope([&function, &args...] {
+      CallInFullContext([&function, &args...] {
         function(AutoMove<Args>::Pass(args)...);
-      }, current)();
+      }, current);
     }
   };
-
-  // Wraps the function with the specified ThreadCrosser's entire scope.
-  static std::function<void()> WrapEntireScope(std::function<void()> call,
-                                               const ThreadCrosser* current);
-
-  // Recursively wraps the function with the ThreadCapture instances that are
-  // currently in scope.
-  static std::function<void()> WrapContextRec(std::function<void()> call,
-                                              const ThreadCrosser* current);
 
   static inline ThreadCrosser* GetCurrent() { return current_; }
   static inline void SetCurrent(ThreadCrosser* value) { current_ = value; }
@@ -202,7 +210,7 @@ std::function<Return(Args...)> ThreadCrosser::WrapFunction(
   if (function && current) {
     return [current, function](Args... args) -> Return {
       return AutoCall<Return, Args...>::Execute(
-          current, std::move(function), AutoMove<Args>::Pass(args)...);
+          current, function, AutoMove<Args>::Pass(args)...);
     };
   } else {
     return function;

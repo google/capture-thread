@@ -23,28 +23,16 @@ limitations under the License.
 namespace capture_thread {
 
 // static
-std::function<void()> ThreadCrosser::WrapCall(std::function<void()> call) {
-  return WrapFunction(call);
-}
-
-// static
-std::function<void()> ThreadCrosser::WrapEntireScope(
-    std::function<void()> call, const ThreadCrosser* current) {
-  if (call && current) {
-    return current->WrapWithCrosser(WrapContextRec(std::move(call), current));
-  } else {
-    return call;
+void ThreadCrosser::CallInFullContext(const std::function<void()>& call,
+                                      const ThreadCrosser* current) {
+  assert(call);
+  if (!call) {
+    return;
   }
-}
-
-// static
-std::function<void()> ThreadCrosser::WrapContextRec(
-    std::function<void()> call, const ThreadCrosser* current) {
   if (current) {
-    return WrapContextRec(current->WrapWithContext(std::move(call)),
-                          current->Parent());
+    current->CallInReverse(call, { current, nullptr });
   } else {
-    return call;
+    call();
   }
 }
 
