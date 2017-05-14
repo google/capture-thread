@@ -181,8 +181,7 @@ void ThreadCapture<Type>::AutoThreadCrosser::ReconstructContextAndCall(
     const auto current = reverse_scope.previous->current;
     assert(current);
     if (current) {
-      reverse_scope.previous->current->ReconstructContextAndCall(
-          call, *reverse_scope.previous);
+      current->ReconstructContextAndCall(call, *reverse_scope.previous);
     }
   } else {
     // Makes the ThreadCrosser available in this scope so that call itself can

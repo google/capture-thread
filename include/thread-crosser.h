@@ -54,7 +54,8 @@ class ThreadCrosser {
   ThreadCrosser() = default;
   virtual ~ThreadCrosser() = default;
 
-  // Keeps track of a reverse call stack when wrapping a callback.
+  // Keeps track of a reverse call stack when wrapping a callback. (This is used
+  // to create a linked-list of ThreadCrosser on the stack.)
   struct ReverseScope {
     const ThreadCrosser* const current;
     const ReverseScope* const previous;
@@ -62,8 +63,9 @@ class ThreadCrosser {
 
   // Performs the function call in the full ThreadCapture context above this
   // ThreadCrosser.
-  static void CallInFullContext(const std::function<void()>& call,
-                                const ThreadCrosser* current);
+  inline void CallInFullContext(const std::function<void()>& call) const {
+    FindTopAndCall(call, { this, nullptr });
+  }
 
   // Traverses to the top of the ThreadCrosser stack to recursively rebuild the
   // stack of ThreadCapture, then calls the callback.
@@ -157,7 +159,7 @@ std::function<Return(Args...)> ThreadCrosser::WrapFunction(
   if (function && current) {
     return [current, function](Args... args) -> Return {
       return AutoCall<Return, Args...>::Execute(
-          current, function, AutoMove<Args>::Pass(args)...);
+          *current, function, AutoMove<Args>::Pass(args)...);
     };
   } else {
     return function;
@@ -179,13 +181,13 @@ struct ThreadCrosser::AutoMove<Type&> {
 // Handles return-by-value.
 template <class Return, class... Args>
 struct ThreadCrosser::AutoCall {
-  static Return Execute(ThreadCrosser* current,
+  static Return Execute(const ThreadCrosser& current,
                         const std::function<Return(Args...)>& function,
                         Args... args) {
     typename std::remove_cv<Return>::type value = Return();
-    CallInFullContext([&value, &function, &args...] {
+    current.CallInFullContext([&value, &function, &args...] {
       value = function(AutoMove<Args>::Pass(args)...);
-    }, current);
+    });
     return value;
   }
 };
@@ -193,13 +195,13 @@ struct ThreadCrosser::AutoCall {
 // Handles return-by-reference.
 template <class Return, class... Args>
 struct ThreadCrosser::AutoCall<Return&, Args...> {
-  static Return& Execute(ThreadCrosser* current,
+  static Return& Execute(const ThreadCrosser& current,
                           const std::function<Return&(Args...)>& function,
                           Args... args) {
     Return* value(nullptr);
-    CallInFullContext([&value, &function, &args...] {
+    current.CallInFullContext([&value, &function, &args...] {
       value = &function(AutoMove<Args>::Pass(args)...);
-    }, current);
+    });
     assert(value);
     return *value;
   }
@@ -208,21 +210,21 @@ struct ThreadCrosser::AutoCall<Return&, Args...> {
 // Handles void return type.
 template <class... Args>
 struct ThreadCrosser::AutoCall<void, Args...> {
-  static void Execute(ThreadCrosser* current,
+  static void Execute(const ThreadCrosser& current,
                       const std::function<void(Args...)>& function,
                       Args... args) {
-    CallInFullContext([&function, &args...] {
+    current.CallInFullContext([&function, &args...] {
       function(AutoMove<Args>::Pass(args)...);
-    }, current);
+    });
   }
 };
 
 // Handles callback type.
 template <>
 struct ThreadCrosser::AutoCall<void> {
-  static void Execute(ThreadCrosser* current,
+  static void Execute(const ThreadCrosser& current,
                       const std::function<void()>& function) {
-    CallInFullContext(function, current);
+    current.CallInFullContext(function);
   }
 };
 

@@ -23,19 +23,6 @@ limitations under the License.
 namespace capture_thread {
 
 // static
-void ThreadCrosser::CallInFullContext(const std::function<void()>& call,
-                                      const ThreadCrosser* current) {
-  if (current) {
-    current->FindTopAndCall(call, { current, nullptr });
-  } else {
-    assert(call);
-    if (call) {
-      call();
-    }
-  }
-}
-
-// static
 thread_local ThreadCrosser* ThreadCrosser::current_(nullptr);
 
 }  // namespace capture_thread
