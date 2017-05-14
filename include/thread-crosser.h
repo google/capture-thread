@@ -133,66 +133,16 @@ class ThreadCrosser {
   // function so that Type can be made explicit, which is necessary for type-
   // checking to work.
 
-  // Handles pass-by-value.
   template <class Type>
-  struct AutoMove {
-    static Type&& Pass(Type& value) { return std::move(value); }
-  };
-
-  // Handles pass-by-reference.
-  template <class Type>
-  struct AutoMove<Type&> {
-    static Type& Pass(Type& value) { return value; }
-  };
+  struct AutoMove;
 
   // AutoCall (and its specializations) ensure that return values are not
   // inappropriately copied, e.g., when returning by reference, or when the
   // return type is void. This is a class instead of a function so that the
   // types can be made explicit, which is necessary for type-checking to work.
 
-  // Handles return-by-value.
   template <class Return, class... Args>
-  struct AutoCall {
-    static Return Execute(ThreadCrosser* current,
-                          const std::function<Return(Args...)>& function,
-                          Args... args) {
-      assert(function);
-      typename std::remove_cv<Return>::type value = Return();
-      CallInFullContext([&value, &function, &args...] {
-        value = function(AutoMove<Args>::Pass(args)...);
-      }, current);
-      return value;
-    }
-  };
-
-  // Handles return-by-reference.
-  template <class Return, class... Args>
-  struct AutoCall<Return&, Args...> {
-    static Return& Execute(ThreadCrosser* current,
-                           const std::function<Return&(Args...)>& function,
-                           Args... args) {
-      assert(function);
-      Return* value(nullptr);
-      CallInFullContext([&value, &function, &args...] {
-        value = &function(AutoMove<Args>::Pass(args)...);
-      }, current);
-      assert(value);
-      return *value;
-    }
-  };
-
-  // Handles void return type.
-  template <class... Args>
-  struct AutoCall<void, Args...> {
-    static void Execute(ThreadCrosser* current,
-                        const std::function<void(Args...)>& function,
-                        Args... args) {
-      assert(function);
-      CallInFullContext([&function, &args...] {
-        function(AutoMove<Args>::Pass(args)...);
-      }, current);
-    }
-  };
+  struct AutoCall;
 
   static inline ThreadCrosser* GetCurrent() { return current_; }
   static inline void SetCurrent(ThreadCrosser* value) { current_ = value; }
@@ -216,6 +166,68 @@ std::function<Return(Args...)> ThreadCrosser::WrapFunction(
     return function;
   }
 }
+
+// Handles pass-by-value.
+template <class Type>
+struct ThreadCrosser::AutoMove {
+  static Type&& Pass(Type& value) { return std::move(value); }
+};
+
+// Handles pass-by-reference.
+template <class Type>
+struct ThreadCrosser::AutoMove<Type&> {
+  static Type& Pass(Type& value) { return value; }
+};
+
+// Handles return-by-value.
+template <class Return, class... Args>
+struct ThreadCrosser::AutoCall {
+  static Return Execute(ThreadCrosser* current,
+                        const std::function<Return(Args...)>& function,
+                        Args... args) {
+    typename std::remove_cv<Return>::type value = Return();
+    CallInFullContext([&value, &function, &args...] {
+      value = function(AutoMove<Args>::Pass(args)...);
+    }, current);
+    return value;
+  }
+};
+
+// Handles return-by-reference.
+template <class Return, class... Args>
+struct ThreadCrosser::AutoCall<Return&, Args...> {
+  static Return& Execute(ThreadCrosser* current,
+                          const std::function<Return&(Args...)>& function,
+                          Args... args) {
+    Return* value(nullptr);
+    CallInFullContext([&value, &function, &args...] {
+      value = &function(AutoMove<Args>::Pass(args)...);
+    }, current);
+    assert(value);
+    return *value;
+  }
+};
+
+// Handles void return type.
+template <class... Args>
+struct ThreadCrosser::AutoCall<void, Args...> {
+  static void Execute(ThreadCrosser* current,
+                      const std::function<void(Args...)>& function,
+                      Args... args) {
+    CallInFullContext([&function, &args...] {
+      function(AutoMove<Args>::Pass(args)...);
+    }, current);
+  }
+};
+
+// Handles callback type.
+template <>
+struct ThreadCrosser::AutoCall<void> {
+  static void Execute(ThreadCrosser* current,
+                      const std::function<void()>& function) {
+    CallInFullContext(function, current);
+  }
+};
 
 }  // namespace capture_thread
 
