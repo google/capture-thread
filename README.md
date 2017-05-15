@@ -49,8 +49,8 @@ This library establishes the following idiom *(using logging as an example)*:
     contain the logged messages.)*
 
 3.  While enabled, the instrumentation transparently alters the behavior of
-    logic deep within the code that would otherwise use default behavior.
-    *(The log-capture instance redirects log messages to a `std::list` while the
+    logic deep within the code that would otherwise use default behavior. *(The
+    log-capture instance redirects log messages to a `std::list` while the
     instance is in scope.)*
 
 4.  Instrumentation can be shared across threads in *explicitly-specified*

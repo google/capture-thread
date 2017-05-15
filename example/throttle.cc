@@ -73,13 +73,13 @@ class SharedThrottler : public RateThrottler {
     const auto current_time = GetCurrentTime();
     switch (type_) {
       case LimitType::kMean:
-        std::this_thread::sleep_for(
-            start_time_ + (seconds_between_events_ * wait_counter_) -
-            current_time);
+        std::this_thread::sleep_for(start_time_ +
+                                    (seconds_between_events_ * wait_counter_) -
+                                    current_time);
         break;
       case LimitType::kMax:
-        std::this_thread::sleep_for(
-            seconds_between_events_ - (current_time - last_time_));
+        std::this_thread::sleep_for(seconds_between_events_ -
+                                    (current_time - last_time_));
         break;
     }
     last_time_ = GetCurrentTime();

@@ -64,7 +64,7 @@ class ThreadCrosser {
   // Performs the function call in the full ThreadCapture context above this
   // ThreadCrosser.
   inline void CallInFullContext(const std::function<void()>& call) const {
-    FindTopAndCall(call, { this, nullptr });
+    FindTopAndCall(call, {this, nullptr});
   }
 
   // Traverses to the top of the ThreadCrosser stack to recursively rebuild the
@@ -75,8 +75,8 @@ class ThreadCrosser {
   // Instantiates the ThreadCapture context associated with this ThreadCrosser,
   // then recursively calls the next ThreadCrosser.
   virtual void ReconstructContextAndCall(
-     const std::function<void()>& call,
-     const ReverseScope& reverse_scope) const = 0;
+      const std::function<void()>& call,
+      const ReverseScope& reverse_scope) const = 0;
 
   class ScopedCrosser;
 
@@ -158,8 +158,8 @@ std::function<Return(Args...)> ThreadCrosser::WrapFunction(
   const auto current = GetCurrent();
   if (function && current) {
     return [current, function](Args... args) -> Return {
-      return AutoCall<Return, Args...>::Execute(
-          *current, function, AutoMove<Args>::Pass(args)...);
+      return AutoCall<Return, Args...>::Execute(*current, function,
+                                                AutoMove<Args>::Pass(args)...);
     };
   } else {
     return function;
@@ -196,8 +196,8 @@ struct ThreadCrosser::AutoCall {
 template <class Return, class... Args>
 struct ThreadCrosser::AutoCall<Return&, Args...> {
   static Return& Execute(const ThreadCrosser& current,
-                          const std::function<Return&(Args...)>& function,
-                          Args... args) {
+                         const std::function<Return&(Args...)>& function,
+                         Args... args) {
     Return* value(nullptr);
     current.CallInFullContext([&value, &function, &args...] {
       value = &function(AutoMove<Args>::Pass(args)...);
@@ -213,9 +213,8 @@ struct ThreadCrosser::AutoCall<void, Args...> {
   static void Execute(const ThreadCrosser& current,
                       const std::function<void(Args...)>& function,
                       Args... args) {
-    current.CallInFullContext([&function, &args...] {
-      function(AutoMove<Args>::Pass(args)...);
-    });
+    current.CallInFullContext(
+        [&function, &args...] { function(AutoMove<Args>::Pass(args)...); });
   }
 };
 
