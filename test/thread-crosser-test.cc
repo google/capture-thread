@@ -123,10 +123,10 @@ TEST(ThreadCrosserTest, WrapFunctionIsFineWithoutLogger) {
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckConstValueReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<const int(Type, Type&)> function(
-  [](Type left, Type& right) {
-    *right = *left;
-    return 3;
-  });
+      [](Type left, Type& right) {
+        *right = *left;
+        return 3;
+      });
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   Type left(new int(1)), right(new int(2));
   EXPECT_EQ(wrapped(std::move(left), right), 3);
@@ -137,10 +137,10 @@ TEST(ThreadCrosserTest, WrapFunctionTypeCheckConstValueReturn) {
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<Type(Type, Type&)> function(
-  [](Type left, Type& right) -> Type {
-    *right = *left;
-    return left;
-  });
+      [](Type left, Type& right) -> Type {
+        *right = *left;
+        return left;
+      });
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   Type left(new int(1)), right(new int(2));
   int* left_ptr = left.get();
@@ -153,10 +153,10 @@ TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckReferenceReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<Type&(Type, Type&)> function(
-  [](Type left, Type& right) -> Type& {
-    *right = *left;
-    return right;
-  });
+      [](Type left, Type& right) -> Type& {
+        *right = *left;
+        return right;
+      });
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   Type left(new int(1)), right(new int(2));
   EXPECT_EQ(&wrapped(std::move(left), right), &right);
@@ -166,9 +166,8 @@ TEST(ThreadCrosserTest, WrapFunctionTypeCheckReferenceReturn) {
 
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckVoidReturn) {
   using Type = std::unique_ptr<int>;
-  const std::function<void(Type, Type&)> function([](Type left, Type& right) {
-    *right = *left;
-  });
+  const std::function<void(Type, Type&)> function(
+      [](Type left, Type& right) { *right = *left; });
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   Type left(new int(1)), right(new int(2));
   wrapped(std::move(left), right);
@@ -204,9 +203,7 @@ TEST(ThreadCrosserTest, WrapFunctionNotLazyWithReferenceReturn) {
 }
 
 TEST(ThreadCrosserTest, WrapFunctionNotLazyWithVoidReturn) {
-  const std::function<void()> function([]() {
-    LogText::Log("logged 1");
-  });
+  const std::function<void()> function([]() { LogText::Log("logged 1"); });
   LogTextMultiThread logger1;
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   LogTextMultiThread logger2;

@@ -164,7 +164,7 @@ void ThreadCapture<Type>::AutoThreadCrosser::FindTopAndCall(
     const ReverseScope& reverse_scope) const {
   if (cross_with_.Parent()) {
     cross_with_.Parent()->FindTopAndCall(
-        call, { cross_with_.Parent(), &reverse_scope });
+        call, {cross_with_.Parent(), &reverse_scope});
   } else {
     ReconstructContextAndCall(call, reverse_scope);
   }

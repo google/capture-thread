@@ -44,17 +44,15 @@ static std::chrono::duration<double> GetCurrentTime() {
 }
 
 void TimeIterations(const std::string& prefix,
-                    const std::function<void()>& call,
-                    int count) {
+                    const std::function<void()>& call, int count) {
   const auto start_time = GetCurrentTime();
   for (int i = 0; i < count; ++i) {
     call();
   }
   const auto finish_time = GetCurrentTime();
   const double elapsed_ms = 1000. * (finish_time - start_time).count();
-  std::cerr << prefix << ":\t" << elapsed_ms
-            << "\t(" << elapsed_ms / count << ")"
-            << std::endl;
+  std::cerr << prefix << ":\t" << elapsed_ms << "\t(" << elapsed_ms / count
+            << ")" << std::endl;
 }
 
 int main() {
