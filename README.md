@@ -24,7 +24,7 @@ For example:
 
 -   *Mockers* replace default idioms (e.g., opening files) with alternate
     behavior for the purposes of testing. These actions generally occur deep
-    within the code, and could not otherwise we swapped out for testing without
+    within the code, and could not otherwise be swapped out for testing without
     leaking those details in the API.
 
 This library is designed to handle all of these situations with minimal
@@ -40,24 +40,23 @@ due to ownership and thread-safety issues.
 This library establishes the following idiom *(using logging as an example)*:
 
 1.  The instrumentation is 100% passive unless it is explicitly enabled.
-    *(Logging points in the code that by default just print to `std::cerr`.)*
+    *(For example, logging points that by default just print to `std::cerr`.)*
 
 2.  Instrumentation is enabled in the current thread by *instantiating* an
     implementation, and only remains enabled until that instance goes out of
-    scope. *(Instantiate a log-capture instance of the logger instrumentation in
-    a function that processes an incoming query, so that the query response can
-    contain the logged messages.)*
+    scope. *(For example, an implementation that captures logged lines while
+    it's in scope.)*
 
 3.  While enabled, the instrumentation transparently alters the behavior of
-    logic deep within the code that would otherwise use default behavior. *(The
-    log-capture instance redirects log messages to a `std::list` while the
-    instance is in scope.)*
+    logic deep within the code that would otherwise use default behavior. *(For
+    example, the log-capture instance redirects messages to a `std::list` only
+    while it's in scope.)*
 
 4.  Instrumentation can be shared across threads in *explicitly-specified*
     points in the code, based entirely on how you compartmentalize your logic.
-    *(You split processing of a single query among multiple threads, and you
-    want the instrumentation to capture all log messages that occur for that
-    query.)*
+    *(For example, independent of the instrumentation, you logically split
+    processing of a query into multiple threads, and want the instrumentation to
+    treat it as a single process.)*
 
 ## Key Design Points
 
