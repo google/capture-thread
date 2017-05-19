@@ -36,6 +36,11 @@ target_link_libraries(async
   capture-thread
   ${PTHREAD_LIBRARY})
 
+add_executable(connection
+  example/connection.cc)
+target_link_libraries(connection
+  capture-thread)
+
 add_executable(inherit
   example/inherit.cc)
 target_link_libraries(inherit
