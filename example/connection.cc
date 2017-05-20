@@ -18,7 +18,9 @@ limitations under the License.
 
 // This example demonstrates sharing a client connection (e.g., a socket) within
 // the thread so that it doesn't need to be passed around to all functions that
-// require access to it.
+// require access to it. Keep in mind that this design pattern could be
+// problematic if multiple threads need to access the client. (This essentially
+// turns the current thread into a singleton.)
 
 #include <cassert>
 #include <iostream>
@@ -77,12 +79,12 @@ class ClientFromStandardStreams : public ClientConnection {
   bool CheckConnection() { return !!std::cout && !!std::cin; }
 
   bool SendMessage(const std::string& message) {
-    return (std::cout << "*** Message: " << message << " ***" << std::endl);
+    return !!(std::cout << "*** Message: " << message << " ***" << std::endl);
   }
 
   bool ReceiveMessage(std::string* message) {
     assert(message);
-    return std::getline(std::cin, *message, '\n');
+    return !!std::getline(std::cin, *message, '\n');
   }
 
  private:
