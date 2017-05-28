@@ -52,6 +52,12 @@ target_link_libraries(
   limit
   capture-thread)
 
+add_executable(manual
+  example/manual.cc)
+target_link_libraries(manual
+  capture-thread
+  ${PTHREAD_LIBRARY})
+
 add_executable(mock
   example/mock.cc)
 target_link_libraries(mock
