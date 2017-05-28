@@ -41,6 +41,11 @@ add_executable(connection
 target_link_libraries(connection
   capture-thread)
 
+add_executable(function
+  example/function.cc)
+target_link_libraries(function
+  capture-thread)
+
 add_executable(inherit
   example/inherit.cc)
 target_link_libraries(inherit
