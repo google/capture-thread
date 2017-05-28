@@ -83,16 +83,16 @@ and reliable:
 In some cases, it might not be appropriate (or possible) to use the **Capture
 Thread Library**:
 
--   To keep your design comprehensible, you *should not* use this library as a
-    means of passing "normal" data (e.g., input to be processed) between parts
-    of your project. While this library is safe in such situations, this would
-    likely lead to difficult-to-follow code, and perhaps baffling latent bugs.
+-   By design, this library is meant to help you *circumvent* the structure of
+    your program, specifically so that you don't need to modify your design to
+    facilitate instrumentation. Although you could technically structure the
+    business logic of your program around this library, doing so would likely
+    lead to difficult-to-follow code and baffling latent bugs.
 
--   At the moment, this library does not handle the sharing of instrumentation
-    between threads if you are unable to pass a `std::function` from one thread
-    to another. For example, you might use a framework that creates its own
-    threads that are not visible to your project. (A work-around will probably
-    be added to this library in the future, however.)
+-   If you want to share instrumentation between threads, you *must* be able to
+    pass either a `std::function` or a pointer from the source thread to the
+    destination thread. This is because those semantics are a part of your
+    project's design, and thus cannot be automatically inferred by the library.
 
 -   Since this library is scope-driven, you *cannot* share instrumentation
     outside of the scope it was created in. For example:
