@@ -55,35 +55,18 @@ class RateThrottler : public ThreadCapture<RateThrottler> {
 // Limits the processing rate based on a shared internal timer.
 class SharedThrottler : public RateThrottler {
  public:
-  enum class LimitType {
-    kMean,  // Rate is respected on average.
-    kMax,   // Rate is never exceeded.
-  };
-
-  explicit SharedThrottler(LimitType type, double seconds_between_events)
-      : type_(type),
-        seconds_between_events_(seconds_between_events),
-        start_time_(GetCurrentTime()),
-        last_time_(GetCurrentTime()),
+  explicit SharedThrottler(double seconds_between_events)
+      : seconds_between_events_(seconds_between_events),
+        last_time_(GetCurrentTime() - seconds_between_events_),
         cross_and_capture_to_(this) {}
 
  protected:
   void WaitForNextEvent() override {
     std::lock_guard<std::mutex> lock(time_lock_);
     const auto current_time = GetCurrentTime();
-    switch (type_) {
-      case LimitType::kMean:
-        std::this_thread::sleep_for(start_time_ +
-                                    (seconds_between_events_ * wait_counter_) -
-                                    current_time);
-        break;
-      case LimitType::kMax:
-        std::this_thread::sleep_for(seconds_between_events_ -
-                                    (current_time - last_time_));
-        break;
-    }
+    std::this_thread::sleep_for(seconds_between_events_ -
+                                (current_time - last_time_));
     last_time_ = GetCurrentTime();
-    ++wait_counter_;
   }
 
  private:
@@ -92,14 +75,9 @@ class SharedThrottler : public RateThrottler {
         std::chrono::high_resolution_clock::now().time_since_epoch());
   }
 
-  const LimitType type_;
   const std::chrono::duration<double> seconds_between_events_;
-  const std::chrono::duration<double> start_time_;
-
   std::mutex time_lock_;
   std::chrono::duration<double> last_time_;
-  int wait_counter_ = 0;
-
   const AutoThreadCrosser cross_and_capture_to_;
 };
 
@@ -130,12 +108,7 @@ void Execute() {
 int main() {
   {
     std::cerr << "Using kMean of 100ms" << std::endl;
-    SharedThrottler throttler(SharedThrottler::LimitType::kMean, 0.1);
-    Execute();
-  }
-  {
-    std::cerr << "Using kMax of 200ms" << std::endl;
-    SharedThrottler throttler(SharedThrottler::LimitType::kMax, 0.2);
+    SharedThrottler throttler(0.1);
     Execute();
   }
   std::cerr << "Without throttling" << std::endl;

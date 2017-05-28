@@ -45,8 +45,8 @@ class Reporter : public ThreadCapture<Reporter> {
   // Arbitrary content to report, which would generally be more structured.
   using Report = std::list<std::string>;
 
-  // Sends the report, if a reporter is in scope; otherwise does nothing. (Move
-  // semantics are assumed here, to cut down on copy operations in both cases.)
+  // Sends the report, if a reporter is in scope; otherwise does nothing. Note
+  // that noting about this class requires reporting to be asynchronous.
   static void Send(Report report) {
     if (GetCurrent()) {
       GetCurrent()->SendReport(std::move(report));
@@ -86,6 +86,10 @@ class ReportAsync : public Reporter {
       if (!reporter_thread_) {
         StartThread();
       }
+      // This assumes that the rate at which SendReport is called does not
+      // exceed the rate at which reports can be written, on average. Since that
+      // isn't always a safe assumption, it might be helpful to limit the queue
+      // size and either wait or drop reports if that limit is exceeded here.
       queue_.push(std::move(report));
       queue_wait_.notify_all();
     }
@@ -132,10 +136,6 @@ class ReportAsync : public Reporter {
   bool terminated_ = false;
   std::mutex queue_lock_;
   std::condition_variable queue_wait_;
-  // It's assumed that the average time between calls to Reporter::Send will not
-  // exceed the rate at which reports can be written. That isn't a safe
-  // assumption in practice, so you would normally want to limit the capacity
-  // here and reject reports if that's exceeded.
   std::queue<Report> queue_;
   std::unique_ptr<std::thread> reporter_thread_;
   const AutoThreadCrosser cross_and_capture_to_;

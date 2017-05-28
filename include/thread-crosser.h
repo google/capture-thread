@@ -41,6 +41,14 @@ class ThreadCrosser {
   // Wraps a general function with the current scope. The return must *never*
   // outlive the scope that it was created in.
   template <class Return, class... Args>
+  static inline std::function<Return(Args...)> WrapFunction(
+      Return(*function)(Args...)) {
+    return WrapFunction(std::function<Return(Args...)>(function));
+  }
+
+  // Wraps a general function with the current scope. The return must *never*
+  // outlive the scope that it was created in.
+  template <class Return, class... Args>
   static std::function<Return(Args...)> WrapFunction(
       std::function<Return(Args...)> function);
 

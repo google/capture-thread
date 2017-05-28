@@ -36,6 +36,16 @@ target_link_libraries(async
   capture-thread
   ${PTHREAD_LIBRARY})
 
+add_executable(connection
+  example/connection.cc)
+target_link_libraries(connection
+  capture-thread)
+
+add_executable(function
+  example/function.cc)
+target_link_libraries(function
+  capture-thread)
+
 add_executable(inherit
   example/inherit.cc)
 target_link_libraries(inherit
@@ -46,6 +56,12 @@ add_executable(limit
 target_link_libraries(
   limit
   capture-thread)
+
+add_executable(manual
+  example/manual.cc)
+target_link_libraries(manual
+  capture-thread
+  ${PTHREAD_LIBRARY})
 
 add_executable(mock
   example/mock.cc)
