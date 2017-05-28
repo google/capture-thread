@@ -93,21 +93,16 @@ int main() {
   // Captures log entries while in scope.
   LogText logger;
 
-  // For template deduction to work properly in ThreadCrosser, the function
-  // pointer needs to be wrapped in an explicitly-typed std::function.
-  const std::function<bool(const std::string&, const std::string&)>
-      less_than(&LessThan);
-
   words_copy = words;
-  // Here we don't know for sure if less_than is going to be called in this
+  // Here we don't know for sure if LessThan is going to be called in this
   // thread or not.
-  ThreadedSort(words_copy.begin(), words_copy.end(), less_than);
+  ThreadedSort(words_copy.begin(), words_copy.end(), &LessThan);
 
   words_copy = words;
   // ThreadCrosser::WrapFunction ensures that the scope is captured, regardless
   // of how ThreadedSort splits up the process,
   ThreadedSort(words_copy.begin(), words_copy.end(),
-               ThreadCrosser::WrapFunction(less_than));
+               ThreadCrosser::WrapFunction(&LessThan));
 
   for (const auto& line : logger.CopyLines()) {
     std::cerr << "Captured: " << line << std::endl;

@@ -120,6 +120,19 @@ TEST(ThreadCrosserTest, WrapFunctionIsFineWithoutLogger) {
   EXPECT_TRUE(called);
 }
 
+// Used by WrapFunctionTypeInferenceFromFunctionPointer.
+int Identity(int x) {
+  LogText::Log("logged 1");
+  return x;
+}
+
+TEST(ThreadCrosserTest, WrapFunctionTypeInferenceFromFunctionPointer) {
+  LogTextMultiThread logger;
+  auto identity = ThreadCrosser::WrapFunction(&Identity);
+  EXPECT_EQ(identity(1), 1);
+  EXPECT_THAT(logger.GetLines(), ElementsAre("logged 1"));
+}
+
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckConstValueReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<const int(Type, Type&)> function(
