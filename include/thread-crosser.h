@@ -42,7 +42,7 @@ class ThreadCrosser {
   // outlive the scope that it was created in.
   template <class Return, class... Args>
   static inline std::function<Return(Args...)> WrapFunction(
-      Return(*function)(Args...)) {
+      Return (*function)(Args...)) {
     return WrapFunction(std::function<Return(Args...)>(function));
   }
 

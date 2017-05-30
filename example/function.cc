@@ -75,18 +75,17 @@ bool LessThan(const std::string& left, const std::string& right) {
 
 // This simulates a sorting function that might use multiple threads, as a
 // hidden implementation detail.
-template<class Iterator, class Compare>
+template <class Iterator, class Compare>
 void ThreadedSort(Iterator begin, Iterator end, const Compare& compare) {
-  std::thread worker([&begin, &end, &compare] {
-    std::sort(begin, end, compare);
-  });
+  std::thread worker(
+      [&begin, &end, &compare] { std::sort(begin, end, compare); });
   worker.join();
 }
 
 int main() {
   const std::vector<std::string> words{
-        "this", "is", "a", "list", "of", "words", "to", "sort",
-      };
+      "this", "is", "a", "list", "of", "words", "to", "sort",
+  };
 
   std::vector<std::string> words_copy;
 

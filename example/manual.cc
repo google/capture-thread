@@ -70,9 +70,8 @@ int main() {
   LogText logger;
 
   // Instrumentation isn't shared by default.
-  std::thread unlogged_thread1([] {
-    LogText::Log("Logging has not been passed on here.");
-  });
+  std::thread unlogged_thread1(
+      [] { LogText::Log("Logging has not been passed on here."); });
   unlogged_thread1.join();
 
   // Since ScopedCapture is used instead of AutoThreadCrosser, ThreadCrosser::
