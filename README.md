@@ -39,8 +39,8 @@ due to ownership and thread-safety issues.
 
 This library establishes the following idiom *(using logging as an example)*:
 
-1.  The instrumentation is 100% passive unless it is explicitly enabled.
-    *(For example, logging points that by default just print to `std::cerr`.)*
+1.  The instrumentation is 100% passive unless it is explicitly enabled. *(For
+    example, logging points that by default just print to `std::cerr`.)*
 
 2.  Instrumentation is enabled in the current thread by *instantiating* an
     implementation, and only remains enabled until that instance goes out of
