@@ -293,6 +293,21 @@ TEST(ThreadCrosserTest, MultipleThreadCrossingWithOverride) {
   EXPECT_THAT(logger1.GetLines(), ElementsAre());
 }
 
+TEST(ThreadCrosserTest, MultipleThreadCrossingWithMasking) {
+  LogTextMultiThread logger1;
+  LogTextMultiThread logger2;
+
+  std::thread worker(ThreadCrosser::WrapCall([] {
+    std::thread worker(
+        ThreadCrosser::WrapCall([] { LogText::Log("logged 2"); }));
+    worker.join();
+  }));
+  worker.join();
+
+  EXPECT_THAT(logger1.GetLines(), ElementsAre());
+  EXPECT_THAT(logger2.GetLines(), ElementsAre("logged 2"));
+}
+
 TEST(ThreadCrosserTest, DifferentLoggersInSameThread) {
   CallbackQueue queue;
 

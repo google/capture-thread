@@ -39,6 +39,12 @@ class LogText : public ThreadCapture<LogText> {
  public:
   LogText() : capture_to_(this) {}
 
+  // By default, manually crossing threads is disallowed. To enable it for a
+  // specific class, add the `using` declarations below to make these two
+  // classes public.
+  using ThreadCapture<LogText>::ThreadBridge;
+  using ThreadCapture<LogText>::CrossThreads;
+
   static void Log(std::string line) {
     if (GetCurrent()) {
       GetCurrent()->LogLine(std::move(line));

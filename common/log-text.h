@@ -34,6 +34,10 @@ class LogText : public ThreadCapture<LogText> {
  public:
   static void Log(std::string line);
 
+  // Allows callers to manually cross threads.
+  using ThreadCapture<LogText>::ThreadBridge;
+  using ThreadCapture<LogText>::CrossThreads;
+
  protected:
   LogText() = default;
   virtual ~LogText() = default;
