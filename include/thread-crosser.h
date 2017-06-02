@@ -26,28 +26,44 @@ limitations under the License.
 
 namespace capture_thread {
 
-// Automatically makes an object shared within a single thread to be shared with
-// another thread. Use ThreadCapture::AutoThreadCrosser to add the functionality
-// to an object, then use ThreadCrosser::WrapCall or ThreadCrosser::WrapFunction
-// to enable sharing for a specific callback.
+// Manages automatic thread-crossing for sharing instrumentation classes derived
+// from ThreadCapture. The static API allows the caller to automatically share
+// all instrumentation types that are in scope, provided they use
+// AutoThreadCrosser to manage scoping. Not all classes will have this enabled,
+// since it can cause unexpected results.
 class ThreadCrosser {
  public:
-  // Wraps a simple callback with the current scope. The return must *never*
-  // outlive the scope that it was created in.
+  // Wraps a callback to share instrumentation that's currently in scope with a
+  // worker thread. Call this in the main thread, then pass the returned value
+  // to the worker thread.
+  //
+  // NOTE: The returned function will be invalidated if any instrumentation goes
+  // out of scope; therefore, the main thread must wait for the worker thread to
+  // call it before continuing.
   static inline std::function<void()> WrapCall(std::function<void()> call) {
     return WrapFunction(std::move(call));
   }
 
-  // Wraps a general function with the current scope. The return must *never*
-  // outlive the scope that it was created in.
+  // Wraps an arbitrary function to share instrumentation that's currently in
+  // scope with a worker thread. Call this in the main thread, then pass the
+  // returned value to the worker thread.
+  //
+  // NOTE: The returned function will be invalidated if any instrumentation goes
+  // out of scope; therefore, the main thread must wait for the worker thread to
+  // call it before continuing.
   template <class Return, class... Args>
   static inline std::function<Return(Args...)> WrapFunction(
       Return (*function)(Args...)) {
     return WrapFunction(std::function<Return(Args...)>(function));
   }
 
-  // Wraps a general function with the current scope. The return must *never*
-  // outlive the scope that it was created in.
+  // Wraps an arbitrary function to share instrumentation that's currently in
+  // scope with a worker thread. Call this in the main thread, then pass the
+  // returned value to the worker thread.
+  //
+  // NOTE: The returned function will be invalidated if any instrumentation goes
+  // out of scope; therefore, the main thread must wait for the worker thread to
+  // call it before continuing.
   template <class Return, class... Args>
   static std::function<Return(Args...)> WrapFunction(
       std::function<Return(Args...)> function);
