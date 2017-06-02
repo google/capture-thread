@@ -25,74 +25,23 @@ limitations under the License.
 
 namespace capture_thread {
 
-// Base class for objects that are used to share information within a thread.
-// This class provides access to an API for making an object visible within the
-// current thread until the object goes out of scope. This class, and its nested
-// classes, are thread-safe and can be made const without losing functionality.
-// NOTE: Implementations of this class by default *cannot* be moved, copied, or
-// dynamically allocated. In addition, please do not make instances of this
-// class, or instances of its derived classes, members of any class that can be
-// dynamically allocated. Lastly, please do not statically allocate instances.
+// Base class for instrumentation classes that need to be made available within
+// a single thread, and possibly shared across threads. Derive a new class Type
+// from ThreadCapture<Type> to define a new instrumentation type. Scoping is
+// managed by adding a ScopedCapture *or* an AutoThreadCrosser member to
+// instantiable implementations of the instrumentation. (If Type is abstract,
+// add the member to the instantiable subclasses.) See ThreadCrosser for info
+// about *automatic* sharing across threads, and ThreadBridge (below) for info
+// about *manually* sharing across threads.
 template <class Type>
 class ThreadCapture {
- public:
+ protected:
   class CrossThreads;
 
-  // Allows the current object (if any) to be made available in another thread.
-  class ThreadBridge {
-   public:
-    inline ThreadBridge() : capture_(GetCurrent()) {}
-
-   private:
-    ThreadBridge(const ThreadBridge&) = delete;
-    ThreadBridge(ThreadBridge&&) = delete;
-    ThreadBridge& operator=(const ThreadBridge&) = delete;
-    ThreadBridge& operator=(ThreadBridge&&) = delete;
-    void* operator new(std::size_t size) = delete;
-
-    friend class CrossThreads;
-    Type* const capture_;
-  };
-
- protected:
-  class ScopedCapture;
-
- public:
-  // Provides access to an object from another thread within the current thread.
-  class CrossThreads {
-   public:
-    explicit inline CrossThreads(const ThreadBridge& bridge)
-        : previous_(GetCurrent()) {
-      SetCurrent(bridge.capture_);
-    }
-
-    explicit inline CrossThreads(const ScopedCapture& capture)
-        : previous_(GetCurrent()) {
-      SetCurrent(capture.current_);
-    }
-
-    inline ~CrossThreads() { SetCurrent(previous_); }
-
-   private:
-    CrossThreads(const CrossThreads&) = delete;
-    CrossThreads(CrossThreads&&) = delete;
-    CrossThreads& operator=(const CrossThreads&) = delete;
-    CrossThreads& operator=(CrossThreads&&) = delete;
-    void* operator new(std::size_t size) = delete;
-
-    Type* const previous_;
-  };
-
- protected:
-  ThreadCapture() = default;
-  virtual ~ThreadCapture() = default;
-
-  // Gets the most-recent object from the stack of the current thread.
-  static inline Type* GetCurrent() { return current_; }
-
-  // Add this as a member when defining Type (as a class), and pass 'this' to
-  // the constructor to make an instance of Type available within the thread
-  // it's allocated in.
+  // Manages scoping of instrumentation within a single thread. Use ThreadBridge
+  // + CrossThreads to share instrumentation across threads. Alternatively, use
+  // AutoThreadCrosser *instead* of ScopedCapture to allow ThreadCrosser to
+  // handle this automatically.
   class ScopedCapture {
    public:
     explicit inline ScopedCapture(Type* capture)
@@ -116,8 +65,71 @@ class ThreadCapture {
     Type* const current_;
   };
 
-  // Use this instead of ScopedCapture to enable automatic thread crossing when
-  // callbacks are wrapped with ThreadCrosser::WrapCall.
+  // Creates a bridge point for sharing a single type of instrumentation between
+  // threads. Create this in the main thread, then enable crossing in the worker
+  // thread with CrossThreads. This is only needed if the instrumentation uses
+  // ScopedCapture instead of AutoThreadCrosser.
+  //
+  // NOTE: This isn't visible by default. If you want to make this functionality
+  // available for a specific instrumentation class, add the following with
+  // public visibility within the instrumentation class:
+  //
+  //   using ThreadCapture<Type>::ThreadBridge;
+  class ThreadBridge {
+   public:
+    inline ThreadBridge() : capture_(GetCurrent()) {}
+
+   private:
+    ThreadBridge(const ThreadBridge&) = delete;
+    ThreadBridge(ThreadBridge&&) = delete;
+    ThreadBridge& operator=(const ThreadBridge&) = delete;
+    ThreadBridge& operator=(ThreadBridge&&) = delete;
+    void* operator new(std::size_t size) = delete;
+
+    friend class CrossThreads;
+    Type* const capture_;
+  };
+
+  class AutoThreadCrosser;
+
+  // Connects a worker thread to the main thread via a ThreadBridge for manually
+  // sharing of a single type of instrumentation.
+  //
+  // NOTE: This isn't visible by default. If you want to make this functionality
+  // available for a specific instrumentation class, add the following with
+  // public visibility within the instrumentation class:
+  //
+  //   using ThreadCapture<Type>::CrossThreads;
+  class CrossThreads {
+   public:
+    explicit inline CrossThreads(const ThreadBridge& bridge)
+        : previous_(GetCurrent()) {
+      SetCurrent(bridge.capture_);
+    }
+
+    inline ~CrossThreads() { SetCurrent(previous_); }
+
+   private:
+    explicit inline CrossThreads(const ScopedCapture& capture)
+        : previous_(GetCurrent()) {
+      SetCurrent(capture.current_);
+    }
+
+    CrossThreads(const CrossThreads&) = delete;
+    CrossThreads(CrossThreads&&) = delete;
+    CrossThreads& operator=(const CrossThreads&) = delete;
+    CrossThreads& operator=(CrossThreads&&) = delete;
+    void* operator new(std::size_t size) = delete;
+
+    friend class AutoThreadCrosser;
+    Type* const previous_;
+  };
+
+  // Enables automatic crossing of threads for a specific instrumentation type
+  // when ThreadCrosser::WrapCall or ThreadCrosser::WrapFunction are used. Add
+  // this as a member of the implementation that you want to automatically
+  // share. Use ScopedCapture *instead* if you don't want ThreadCrosser to
+  // automatically share instrumentation.
   class AutoThreadCrosser : public ThreadCrosser {
    public:
     AutoThreadCrosser(Type* capture)
@@ -142,6 +154,12 @@ class ThreadCapture {
     const ScopedCrosser cross_with_;
     const ScopedCapture capture_to_;
   };
+
+  ThreadCapture() = default;
+  virtual ~ThreadCapture() = default;
+
+  // Gets the most-recent object from the stack of the current thread.
+  static inline Type* GetCurrent() { return current_; }
 
  private:
   ThreadCapture(const ThreadCapture&) = delete;
