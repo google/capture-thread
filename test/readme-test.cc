@@ -128,3 +128,56 @@ int main() {
     std::cerr << "The logger captured: \"" << line << "\"" << std::endl;
   }
 }
+
+// CAVEATS
+
+using MyLogger = Logger;
+
+namespace scope_example1 {
+
+using capture_thread::ThreadCrosser;
+
+void f() { MyLogger capture_messages; }
+void g() { MyLogger::Log("g was called"); }
+
+void Execute() {
+  f();
+  g();
+}
+
+}  // namespace scope_example1
+
+namespace scope_example2 {
+
+using capture_thread::ThreadCrosser;
+
+// Fine, because no wrapping is done.
+std::function<void()> f() {
+  MyLogger capture_messages;
+  return [] { MyLogger::Log("f was called"); };
+}
+
+// Fine, because no instrumentation goes out of scope.
+std::function<void()> g() {
+  return ThreadCrosser::WrapCall([] { MyLogger::Log("g was called"); });
+}
+
+// DANGER! capture_messages goes out of scope, invalidating the function.
+std::function<void()> h() {
+  MyLogger capture_messages;
+  return ThreadCrosser::WrapCall([] { MyLogger::Log("h was called"); });
+}
+
+void Execute() {
+  f()();  // Fine.
+  g()();  // Fine.
+  h()();  // SIGSEGV!
+
+  // Fine. g captures capture_messages, but capture_messages doesn't go out of
+  // scope until the worker thread is joined.
+  MyLogger capture_messages;
+  std::thread worker(g());
+  worker.join();
+}
+
+}  // namespace scope_example2

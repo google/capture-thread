@@ -101,7 +101,7 @@ Thread Library**:
     void f() { MyLogger capture_messages; }
     void g() { MyLogger::Log("g was called"); }
 
-    int main() {
+    void Execute() {
       f();
       g();
     }
@@ -132,10 +132,16 @@ Thread Library**:
       return ThreadCrosser::WrapCall([] { MyLogger::Log("h was called"); });
     }
 
-    int main() {
+    void Execute() {
       f()();  // Fine.
       g()();  // Fine.
       h()();  // SIGSEGV!
+
+      // Fine. g captures capture_messages, but capture_messages doesn't go out of
+      // scope until the worker thread is joined.
+      MyLogger capture_messages;
+      std::thread worker(g());
+      worker.join();
     }
     ```
 

@@ -30,6 +30,11 @@ limitations under the License.
 using capture_thread::ThreadCapture;
 using capture_thread::ThreadCrosser;
 
+constexpr int kRepetitions = 5;
+constexpr int kMaxWraps = 4;
+constexpr int kMaxScopes = 4;
+constexpr int kIterations = 1000000;
+
 class NoOp : public ThreadCapture<NoOp> {
  public:
   NoOp() : cross_and_capture_to_(this) {}
@@ -43,40 +48,41 @@ static std::chrono::duration<double> GetCurrentTime() {
       std::chrono::high_resolution_clock::now().time_since_epoch());
 }
 
-void TimeIterations(const std::string& prefix,
-                    const std::function<void()>& call, int count) {
+void Execute(const std::function<int(int)>& function) {
   const auto start_time = GetCurrentTime();
-  for (int i = 0; i < count; ++i) {
-    call();
+  for (int i = 0; i < kIterations; ++i) {
+    function(i);
   }
   const auto finish_time = GetCurrentTime();
   const double elapsed_ms = 1000. * (finish_time - start_time).count();
-  std::cerr << prefix << ":\t" << elapsed_ms << "\t(" << elapsed_ms / count
-            << ")" << std::endl;
+  std::cout << '\t' << elapsed_ms << '\t' << elapsed_ms / kIterations
+            << std::endl;
+}
+
+void ExecuteWithWrapping(std::function<int(int)> function, int wraps) {
+  if (wraps > 0) {
+    ExecuteWithWrapping(ThreadCrosser::WrapFunction(function), wraps - 1);
+  } else {
+    Execute(function);
+  }
+}
+
+void ExecuteWithScopesAndWrapping(int scopes, int wraps) {
+  if (scopes > 0) {
+    NoOp noop;
+    ExecuteWithScopesAndWrapping(scopes - 1, wraps);
+  } else {
+    ExecuteWithWrapping([](int x) { return x; }, wraps);
+  }
 }
 
 int main() {
-  constexpr int iterations = 10000000;
-  std::function<void()> empty([] {});
-  TimeIterations("0", ThreadCrosser::WrapCall(empty), iterations);
-  {
-    NoOp noop1;
-    TimeIterations("1", ThreadCrosser::WrapCall(empty), iterations);
-    {
-      NoOp noop2;
-      TimeIterations("2", ThreadCrosser::WrapCall(empty), iterations);
-      {
-        NoOp noop3;
-        TimeIterations("3", ThreadCrosser::WrapCall(empty), iterations);
-        {
-          NoOp noop4;
-          TimeIterations("4", ThreadCrosser::WrapCall(empty), iterations);
-        }
-        TimeIterations("3", ThreadCrosser::WrapCall(empty), iterations);
+  for (int i = 0; i < kRepetitions; ++i) {
+    for (int wraps = 1; wraps < kMaxWraps + 1; ++wraps) {
+      for (int scopes = 1; scopes < kMaxScopes + 1; ++scopes) {
+        std::cout << i << '\t' << scopes << '\t' << wraps;
+        ExecuteWithScopesAndWrapping(scopes, wraps);
       }
-      TimeIterations("2", ThreadCrosser::WrapCall(empty), iterations);
     }
-    TimeIterations("1", ThreadCrosser::WrapCall(empty), iterations);
   }
-  TimeIterations("0", ThreadCrosser::WrapCall(empty), iterations);
 }

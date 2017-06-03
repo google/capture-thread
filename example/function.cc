@@ -99,7 +99,7 @@ int main() {
 
   words_copy = words;
   // ThreadCrosser::WrapFunction ensures that the scope is captured, regardless
-  // of how ThreadedSort splits up the process,
+  // of how ThreadedSort splits up the process.
   ThreadedSort(words_copy.begin(), words_copy.end(),
                ThreadCrosser::WrapFunction(&LessThan));
 
