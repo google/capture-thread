@@ -137,23 +137,28 @@ TEST(ThreadCrosserTest, WrapFunctionTypeCheckConstValueReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<const int(Type, Type&)> function(
       [](Type left, Type& right) {
+        LogText::Log("logged 1");
         *right = *left;
         return 3;
       });
+  LogTextMultiThread logger;
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   Type left(new int(1)), right(new int(2));
   EXPECT_EQ(wrapped(std::move(left), right), 3);
   EXPECT_FALSE(left);
   EXPECT_EQ(*right, 1);
+  EXPECT_THAT(logger.GetLines(), ElementsAre("logged 1"));
 }
 
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<Type(Type, Type&)> function(
       [](Type left, Type& right) -> Type {
+        LogText::Log("logged 1");
         *right = *left;
         return left;
       });
+  LogTextMultiThread logger;
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   Type left(new int(1)), right(new int(2));
   int* left_ptr = left.get();
@@ -161,31 +166,40 @@ TEST(ThreadCrosserTest, WrapFunctionTypeCheckValueReturn) {
   EXPECT_FALSE(left);
   EXPECT_EQ(result.get(), left_ptr);
   EXPECT_EQ(*right, 1);
+  EXPECT_THAT(logger.GetLines(), ElementsAre("logged 1"));
 }
 
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckReferenceReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<Type&(Type, Type&)> function(
       [](Type left, Type& right) -> Type& {
+        LogText::Log("logged 1");
         *right = *left;
         return right;
       });
+  LogTextMultiThread logger;
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   Type left(new int(1)), right(new int(2));
   EXPECT_EQ(&wrapped(std::move(left), right), &right);
   EXPECT_FALSE(left);
   EXPECT_EQ(*right, 1);
+  EXPECT_THAT(logger.GetLines(), ElementsAre("logged 1"));
 }
 
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckVoidReturn) {
   using Type = std::unique_ptr<int>;
   const std::function<void(Type, Type&)> function(
-      [](Type left, Type& right) { *right = *left; });
+      [](Type left, Type& right) {
+        LogText::Log("logged 1");
+        *right = *left;
+      });
+  LogTextMultiThread logger;
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   Type left(new int(1)), right(new int(2));
   wrapped(std::move(left), right);
   EXPECT_FALSE(left);
   EXPECT_EQ(*right, 1);
+  EXPECT_THAT(logger.GetLines(), ElementsAre("logged 1"));
 }
 
 TEST(ThreadCrosserTest, WrapFunctionNotLazyWithValueReturn) {
