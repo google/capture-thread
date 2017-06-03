@@ -115,20 +115,27 @@ Thread Library**:
     changes the scope:
 
     ```c++
-    // Fine, because no instrumentation goes out of scope.
+    // Fine, because no wrapping is done.
     std::function<void()> f() {
-      return ThreadCrosser::WrapCall([] { MyLogger::Log("f was called"); });
+      MyLogger capture_messages;
+      return [] { MyLogger::Log("f was called"); };
+    }
+
+    // Fine, because no instrumentation goes out of scope.
+    std::function<void()> g() {
+      return ThreadCrosser::WrapCall([] { MyLogger::Log("g was called"); });
     }
 
     // DANGER! capture_messages goes out of scope, invalidating the function.
-    std::function<void()> g() {
+    std::function<void()> h() {
       MyLogger capture_messages;
-      return ThreadCrosser::WrapCall([] { MyLogger::Log("g was called"); });
+      return ThreadCrosser::WrapCall([] { MyLogger::Log("h was called"); });
     }
 
     int main() {
       f()();  // Fine.
-      g()();  // SIGSEGV!
+      g()();  // Fine.
+      h()();  // SIGSEGV!
     }
     ```
 
