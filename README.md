@@ -111,6 +111,27 @@ Thread Library**:
     scope before `g` is called. In this case, `g` just uses the default behavior
     for `MyLogger::Log`.
 
+    This is actually dangerous if you return a wrapped function in a way that
+    changes the scope:
+
+    ```c++
+    // Fine, because no instrumentation goes out of scope.
+    std::function<void()> f() {
+      return ThreadCrosser::WrapCall([] { MyLogger::Log("f was called"); });
+    }
+
+    // DANGER! capture_messages goes out of scope, invalidating the function.
+    std::function<void()> g() {
+      MyLogger capture_messages;
+      return ThreadCrosser::WrapCall([] { MyLogger::Log("g was called"); });
+    }
+
+    int main() {
+      f()();  // Fine.
+      g()();  // SIGSEGV!
+    }
+    ```
+
 ## Quick Start
 
 Instrumenting a project has four steps. These assume that your project is
