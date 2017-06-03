@@ -188,11 +188,10 @@ TEST(ThreadCrosserTest, WrapFunctionTypeCheckReferenceReturn) {
 
 TEST(ThreadCrosserTest, WrapFunctionTypeCheckVoidReturn) {
   using Type = std::unique_ptr<int>;
-  const std::function<void(Type, Type&)> function(
-      [](Type left, Type& right) {
-        LogText::Log("logged 1");
-        *right = *left;
-      });
+  const std::function<void(Type, Type&)> function([](Type left, Type& right) {
+    LogText::Log("logged 1");
+    *right = *left;
+  });
   LogTextMultiThread logger;
   const auto wrapped = ThreadCrosser::WrapFunction(function);
   Type left(new int(1)), right(new int(2));
