@@ -20,7 +20,14 @@ limitations under the License.
 
 namespace capture_thread {
 
+namespace {
+thread_local ThreadCrosser* current(nullptr);
+}
+
 // static
-thread_local ThreadCrosser* ThreadCrosser::current_(nullptr);
+ThreadCrosser* ThreadCrosser::GetCurrent() { return current; }
+
+// static
+void ThreadCrosser::SetCurrent(ThreadCrosser* value) { current = value; }
 
 }  // namespace capture_thread

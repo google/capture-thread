@@ -167,10 +167,8 @@ class ThreadCrosser {
   template <class Return, class... Args>
   struct AutoCall;
 
-  static inline ThreadCrosser* GetCurrent() { return current_; }
-  static inline void SetCurrent(ThreadCrosser* value) { current_ = value; }
-
-  static thread_local ThreadCrosser* current_;
+  static ThreadCrosser* GetCurrent();
+  static void SetCurrent(ThreadCrosser* value);
 
   template <class Type>
   friend class ThreadCapture;
