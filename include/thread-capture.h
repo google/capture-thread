@@ -22,6 +22,7 @@ limitations under the License.
 #include <cassert>
 
 #include "thread-crosser.h"
+#include "thread-local.h"
 
 namespace capture_thread {
 
@@ -159,7 +160,9 @@ class ThreadCapture {
   virtual ~ThreadCapture() = default;
 
   // Gets the most-recent object from the stack of the current thread.
-  static inline Type* GetCurrent() { return current_; }
+  static inline Type* GetCurrent() {
+    return ThreadLocal<Type>::GetCurrentThreadValue();
+  }
 
  private:
   ThreadCapture(const ThreadCapture&) = delete;
@@ -168,9 +171,9 @@ class ThreadCapture {
   ThreadCapture& operator=(ThreadCapture&&) = delete;
   void* operator new(std::size_t size) = delete;
 
-  static inline void SetCurrent(Type* value) { current_ = value; }
-
-  static thread_local Type* current_;
+  static inline void SetCurrent(Type* value) {
+    ThreadLocal<Type>::SetCurrentThreadValue(value);
+  }
 };
 
 template <class Type>
