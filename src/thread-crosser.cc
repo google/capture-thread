@@ -17,17 +17,18 @@ limitations under the License.
 // Author: Kevin P. Barry [ta0kira@gmail.com] [kevinbarry@google.com]
 
 #include "thread-crosser.h"
+#include "thread-local.h"
 
 namespace capture_thread {
 
-namespace {
-thread_local ThreadCrosser* current(nullptr);
+// static
+ThreadCrosser* ThreadCrosser::GetCurrent() {
+  return ThreadLocal<ThreadCrosser>::GetCurrentThreadValue();
 }
 
 // static
-ThreadCrosser* ThreadCrosser::GetCurrent() { return current; }
-
-// static
-void ThreadCrosser::SetCurrent(ThreadCrosser* value) { current = value; }
+void ThreadCrosser::SetCurrent(ThreadCrosser* value) {
+  ThreadLocal<ThreadCrosser>::SetCurrentThreadValue(value);
+}
 
 }  // namespace capture_thread
