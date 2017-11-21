@@ -36,15 +36,7 @@ namespace capture_thread {
 template <class Type>
 class ThreadCapture {
  protected:
-  ThreadCapture() {
-    if (static_cast<const ThreadCapture*>(static_cast<const Type*>(nullptr))) {
-      // Type must be publicly derived from ThreadCapture<Type>. This is
-      // specifically to avoid leaking access to the protected members of
-      // ThreadCapture<Type> outside of Type and its derived classes. To use
-      // private or protected inheritance, make ThreadCapture<Type> a friend.
-    }
-  }
-
+  ThreadCapture() = default;
   virtual ~ThreadCapture() = default;
 
   class CrossThreads;
