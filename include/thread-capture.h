@@ -36,6 +36,17 @@ namespace capture_thread {
 template <class Type>
 class ThreadCapture {
  protected:
+  ThreadCapture() {
+    if (static_cast<const ThreadCapture*>(static_cast<const Type*>(nullptr))) {
+      // Type must be publicly derived from ThreadCapture<Type>. This is
+      // specifically to avoid leaking access to the protected members of
+      // ThreadCapture<Type> outside of Type and its derived classes. To use
+      // private or protected inheritance, make ThreadCapture<Type> a friend.
+    }
+  }
+
+  virtual ~ThreadCapture() = default;
+
   class CrossThreads;
 
   // Manages scoping of instrumentation within a single thread. Use ThreadBridge
@@ -46,7 +57,7 @@ class ThreadCapture {
    public:
     explicit inline ScopedCapture(Type* capture)
         : previous_(GetCurrent()), current_(capture) {
-      SetCurrent(capture);
+      SetCurrent(current_);
     }
 
     inline ~ScopedCapture() { SetCurrent(Previous()); }
@@ -154,9 +165,6 @@ class ThreadCapture {
     const ScopedCrosser cross_with_;
     const ScopedCapture capture_to_;
   };
-
-  ThreadCapture() = default;
-  virtual ~ThreadCapture() = default;
 
   // Gets the most-recent object from the stack of the current thread.
   static inline Type* GetCurrent() { return current_; }
