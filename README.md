@@ -178,7 +178,7 @@ alone. They might also be general enough for use in multiple projects.
 // instrumentation is used (e.g., logging points) and where it is enabled (e.g.,
 // log-capture points.) Note that instances of ThreadCapture cannot be moved,
 // copied, or dynamically allocated.
-class Logger : capture_thread::ThreadCapture<Logger> {
+class Logger : public capture_thread::ThreadCapture<Logger> {
  public:
   Logger() : cross_and_capture_to_(this) {}
 
